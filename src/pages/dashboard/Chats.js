@@ -27,7 +27,10 @@ import {
 import Friends from "../../sections/dashboard/Friends";
 import { socket } from "../../socket";
 import { useDispatch, useSelector } from "react-redux";
-import { getConversationsFromServer } from "../../redux/slices/conversation";
+import {
+  getConversationsFromServer,
+  SetCurrentConversation,
+} from "../../redux/slices/conversation";
 
 const user_id = window.localStorage.getItem("user_id");
 
@@ -45,6 +48,17 @@ const Chats = () => {
   useEffect(() => {
     dispatch(getConversationsFromServer());
   }, [dispatch]);
+
+  useEffect(() => {
+    const savedId = localStorage.getItem("current_conversation_id");
+
+    if (savedId && conversations.length > 0) {
+      const conv = conversations.find((c) => c.id.toString() === savedId);
+      if (conv) {
+        dispatch(SetCurrentConversation({ conversation: conv }));
+      }
+    }
+  }, [dispatch, conversations]);
 
   const [openDialog, setOpenDialog] = useState(false);
 

@@ -36,11 +36,10 @@ const GeneralApp = () => {
               searchParams.get("type") === "individual-chat" &&
               searchParams.get("id")
                 ? "0px"
-                : "6px solid #0162C4",
+                : "0px solid #0162C4",
           }}
         >
-          {chat_type === "individual" &&
-          room_id !== null ? (
+          {chat_type === "individual" && room_id !== null ? (
             <ChatComponent />
           ) : (
             <Stack

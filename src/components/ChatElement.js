@@ -4,6 +4,10 @@ import { styled, useTheme, alpha } from "@mui/material/styles";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { SelectConversation } from "../redux/slices/app";
+import {
+  SetCurrentConversation,
+  getCurrentMessagesFromServer,
+} from "../redux/slices/conversation";
 
 const truncateText = (string, n) => {
   return string?.length > n ? `${string?.slice(0, n)}...` : string;
@@ -49,6 +53,12 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
   const { room_id } = useSelector((state) => state.app);
   const selectedChatId = room_id?.toString();
 
+  const { conversations } = useSelector(
+    (state) => state.conversation.direct_chat
+  );
+
+  const conversation = conversations.find((conv) => conv.id === id);
+
   let isSelected = +selectedChatId === id;
 
   if (!selectedChatId) {
@@ -61,8 +71,12 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
     <StyledChatBox
       onClick={() => {
         dispatch(SelectConversation({ room_id: id }));
+        dispatch(SetCurrentConversation({ conversation }));
+        dispatch(getCurrentMessagesFromServer(id));
+        localStorage.setItem("current_conversation_id", id);
         console.log("chatid", id);
         console.log("room", room_id);
+        console.log(conversation);
       }}
       sx={{
         width: "100%",

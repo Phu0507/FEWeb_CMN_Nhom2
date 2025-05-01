@@ -97,8 +97,8 @@ const MediaMsg = ({ el, menu }) => {
       >
         <Stack spacing={1}>
           <img
-            src={el.img}
-            alt={el.message}
+            src={el.fileUrl}
+            alt={el.fileUrl}
             style={{ maxHeight: 210, borderRadius: "10px" }}
           />
           <Typography

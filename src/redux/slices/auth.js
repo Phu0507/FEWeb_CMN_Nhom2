@@ -146,8 +146,8 @@ export function LoginUser(formValues) {
           })
         );
         localStorage.setItem("user_id", response.data._id);
-        const storedUserId = localStorage.getItem("user_id");
-        console.log("data", storedUserId);
+        // const storedUserId = localStorage.getItem("user_id");
+        // console.log("data", storedUserId);
         dispatch(
           showSnackbar({ severity: "success", message: response.data.message })
         );
@@ -167,7 +167,7 @@ export function LoginUser(formValues) {
 
 export function LogoutUser() {
   return async (dispatch, getState) => {
-    window.localStorage.removeItem("user_id");
+    localStorage.removeItem("user_id");
     dispatch(slice.actions.signOut());
   };
 }
