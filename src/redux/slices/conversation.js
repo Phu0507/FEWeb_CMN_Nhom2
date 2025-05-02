@@ -1,9 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { faker } from "@faker-js/faker";
 import axios from "../../utils/axios";
+import { socket } from "../../socket";
 
-const user_id = localStorage.getItem("user_id");
-console.log("id", user_id);
+// const user_id = localStorage.getItem("user_id");
+// console.log("id", user_id);
 
 const initialState = {
   direct_chat: {
@@ -19,6 +20,7 @@ const slice = createSlice({
   initialState,
   reducers: {
     fetchDirectConversations(state, action) {
+      const user_id = localStorage.getItem("user_id");
       console.log("id2", user_id);
       const list = action.payload.conversations.map((el) => {
         const isGroup = el.isGroupChat;
@@ -45,6 +47,7 @@ const slice = createSlice({
             user_id: otherUser?._id,
             name: otherUser?.fullName,
             online: otherUser?.status === "online",
+            img: otherUser?.avatar,
             time: "9:36",
             unread: 1,
             pinned: false,
@@ -54,6 +57,7 @@ const slice = createSlice({
       state.direct_chat.conversations = list;
     },
     updateDirectConversation(state, action) {
+      const user_id = localStorage.getItem("user_id");
       const this_conversation = action.payload.conversation;
       state.direct_chat.conversations = state.direct_chat.conversations.map(
         (el) => {
@@ -79,6 +83,7 @@ const slice = createSlice({
       );
     },
     addDirectConversation(state, action) {
+      const user_id = localStorage.getItem("user_id");
       const this_conversation = action.payload.conversation;
       const user = this_conversation.participants.find(
         (elm) => elm._id.toString() !== user_id
@@ -199,6 +204,52 @@ export const getCurrentMessagesFromServer = (conversationId) => {
       dispatch(FetchCurrentMessages({ messages }));
     } catch (error) {
       console.error("Lỗi khi fetch current messages:", error);
+    }
+  };
+};
+
+export const sendDirectMessage = (message, selectedFile) => {
+  return async (dispatch, getState) => {
+    try {
+      // Lấy token và ID cuộc trò chuyện từ Redux store
+      const token = getState().auth.token; // Token từ Redux store
+      const current = getState().conversation.direct_chat.current_conversation;
+
+      // const room_id = getState().app.room_id;
+      // const conversations = getState().conversation.direct_chat.conversations;
+      // const current = conversations.find((el) => el?.id === room_id);
+
+      const conversationId = current.id;
+
+      const formData = new FormData();
+      formData.append("chatId", conversationId);
+      if (message.trim()) formData.append("content", message);
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+        const fileType = selectedFile.type;
+
+        let type = "file";
+        if (fileType.startsWith("image/")) {
+          type = "image";
+        } else if (fileType.startsWith("video/")) {
+          type = "video";
+        } else if (fileType.startsWith("audio/")) {
+          type = "audio";
+        }
+        formData.append("type", type);
+      }
+
+      const response = await axios.post("/api/message", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // dispatch(AddDirectMessage(response.data));
+      socket.emit("newMessage", response.data);
+    } catch (error) {
+      console.error("Lỗi khi gửi tin nhắn:", error);
     }
   };
 };

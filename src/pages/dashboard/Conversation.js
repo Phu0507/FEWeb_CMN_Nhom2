@@ -1,6 +1,6 @@
-import { Stack, Box } from "@mui/material";
+import { Stack, Box, Typography, Avatar } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import { SimpleBarStyle } from "../../components/Scrollbar";
 
 import { ChatHeader, ChatFooter } from "../../components/Chat";
@@ -18,6 +18,8 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   FetchCurrentMessages,
   SetCurrentConversation,
+  getCurrentMessagesFromServer,
+  AddDirectMessage,
 } from "../../redux/slices/conversation";
 import { socket } from "../../socket";
 import {
@@ -28,30 +30,42 @@ import {
   shouldShowTimestamp,
   getDateLabel,
 } from "../../contexts/ChatLogic";
-import ScrollableFeed from "react-scrollable-feed";
 import Linkify from "linkify-react";
 import Lightbox from "react-image-lightbox";
 import "react-image-lightbox/style.css"; // Nhớ import CSS để Lightbox hoạt động
 
 const Conversation = ({ isMobile, menu }) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const { conversations, current_messages } = useSelector(
     (state) => state.conversation.direct_chat
   );
   const { room_id } = useSelector((state) => state.app);
 
+  // useEffect(() => {
+  //   const current = conversations.find((el) => el?.id === room_id);
+
+  //   // socket.emit("get_messages", { conversation_id: current?.id }, (data) => {
+  //   //   // data => list of messages
+  //   //   console.log(data, "List of messages");
+  //   //   dispatch(FetchCurrentMessages({ messages: data }));
+  //   // });
+
+  //   dispatch(SetCurrentConversation(current));
+  // }, []);
   useEffect(() => {
-    const current = conversations.find((el) => el?.id === room_id);
+    dispatch(getCurrentMessagesFromServer(room_id));
+    socket.emit("joinChat", room_id);
+    const handleMessage = (message) => {
+      dispatch(AddDirectMessage(message));
+    };
+    socket.on("messageReceived", handleMessage);
 
-    socket.emit("get_messages", { conversation_id: current?.id }, (data) => {
-      // data => list of messages
-      console.log(data, "List of messages");
-      dispatch(FetchCurrentMessages({ messages: data }));
-    });
-
-    dispatch(SetCurrentConversation(current));
-  }, []);
+    return () => {
+      socket.off("messageReceived", handleMessage);
+    };
+  }, [dispatch, room_id]);
 
   //new
   const user_id = localStorage.getItem("user_id");
@@ -117,7 +131,6 @@ const Conversation = ({ isMobile, menu }) => {
           }
         })}
       </Stack> */}
-      {/* <ScrollableFeed> */}
       {current_messages &&
         current_messages.map((m, i) => {
           const messageDate = new Date(m.createdAt);
@@ -146,14 +159,20 @@ const Conversation = ({ isMobile, menu }) => {
                   </div>
                 </div>
               )}
-              <Stack key={m._id} gap={0} align={"flex-end"}>
-                {/* {(isSameSender(current_messages, m, i, user._id) ||
-                    isLastMessage(current_messages, i, user._id)) && (
-                    <Avatar.Root cursor={"pointer"} mr={1} size={"md"}>
-                      <Avatar.Image src={m.sender.avatar} />
-                      <Avatar.Fallback name={m.sender.fullName} />
-                    </Avatar.Root>
-                  )} */}
+              <Stack
+                key={m._id}
+                direction="row"
+                spacing={0}
+                alignItems="flex-end"
+              >
+                {(isSameSender(current_messages, m, i, user_id) ||
+                  isLastMessage(current_messages, i, user_id)) && (
+                  <Avatar
+                    sx={{ cursor: "pointer", mr: 0.7 }}
+                    alt={m.sender.fullName}
+                    src={m.sender.avatar}
+                  />
+                )}
 
                 {/* Bọc span + menu trong div để kiểm soát hover */}
                 <div
@@ -225,14 +244,21 @@ const Conversation = ({ isMobile, menu }) => {
                       </button>
                     </div>
                   )}
-                  <Stack gap={0} align="flex-start">
-                    <div
-                      style={{
-                        backgroundColor:
-                          m.sender._id === user_id ? "#BEE3F8" : "white",
+                  <Stack
+                    direction="column"
+                    spacing={0} // tương đương gap={0}
+                    alignItems="flex-start" // tương đương align="flex-start"
+                  >
+                    <Box
+                      sx={{
                         borderRadius: "5px",
-                        padding: "5px 10px",
+                        px: "10px",
+                        py: "5px",
                         display: "inline-block",
+                        backgroundColor:
+                          m.sender._id === user_id
+                            ? theme.palette.primary.main
+                            : alpha(theme.palette.background.default, 1),
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                       }}
@@ -312,7 +338,17 @@ const Conversation = ({ isMobile, menu }) => {
                                   className: "link-style",
                                 }}
                               >
-                                {m.content}
+                                <Typography
+                                  variant="body2"
+                                  color={
+                                    m.sender._id === user_id
+                                      ? "#fff"
+                                      : theme.palette.text
+                                  }
+                                >
+                                  {m.content}
+                                </Typography>
+                                {/* <TextMsg m={m} menu={menu} /> */}
                               </Linkify>
                               <style>
                                 {`
@@ -485,22 +521,25 @@ const Conversation = ({ isMobile, menu }) => {
 
                       {/* Timeline nếu là tin nhắn đang được chọn */}
                       {shouldShowTimestamp(current_messages, m, i) && (
-                        <div
-                          style={{
-                            marginTop: "5px",
-                            fontSize: "12px",
-                            color: "#718096",
-                            textAlign:
-                              m.sender._id === user_id ? "left" : "right",
-                          }}
+                        <Typography
+                          color={
+                            m.sender._id === user_id
+                              ? "#fff"
+                              : theme.palette.text
+                          }
+                          marginTop="5px"
+                          fontSize="12px"
+                          textAlign={
+                            m.sender._id === user_id ? "left" : "right"
+                          }
                         >
                           {new Date(m.createdAt).toLocaleTimeString("vi-VN", {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
-                        </div>
+                        </Typography>
                       )}
-                    </div>
+                    </Box>
                     {(isSameSender(current_messages, m, i, user_id) ||
                       isLastMessage(current_messages, i, user_id)) && (
                       <div style={{ marginBottom: "-4px" }}>
@@ -508,7 +547,6 @@ const Conversation = ({ isMobile, menu }) => {
                           <span
                             style={{
                               fontSize: "12px",
-                              color: "#4A5568",
                               fontWeight: "bold",
                             }}
                           >
@@ -523,7 +561,6 @@ const Conversation = ({ isMobile, menu }) => {
             </React.Fragment>
           );
         })}
-      {/* </ScrollableFeed> */}
     </Box>
   );
 };

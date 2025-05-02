@@ -6,6 +6,7 @@ import {
   Stack,
   TextField,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import {
   Camera,
@@ -16,6 +17,7 @@ import {
   Smiley,
   Sticker,
   User,
+  Trash,
 } from "phosphor-react";
 import { useTheme, styled } from "@mui/material/styles";
 import React, { useRef, useState } from "react";
@@ -24,7 +26,8 @@ import useResponsive from "../../hooks/useResponsive";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { socket } from "../../socket";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { sendDirectMessage } from "../../redux/slices/conversation";
 
 const StyledInput = styled(TextField)(({ theme }) => ({
   "& .MuiInputBase-input": {
@@ -34,34 +37,34 @@ const StyledInput = styled(TextField)(({ theme }) => ({
 }));
 
 const Actions = [
-  {
-    color: "#4da5fe",
-    icon: <Image size={24} />,
-    y: 102,
-    title: "Photo/Video",
-  },
+  // {
+  //   color: "#4da5fe",
+  //   icon: <Image size={24} />,
+  //   y: 102+70
+  //   title: "Photo/Video",
+  // },
   {
     color: "#1b8cfe",
     icon: <Sticker size={24} />,
-    y: 172,
+    y: 102,
     title: "Stickers",
   },
   {
     color: "#0172e4",
     icon: <Camera size={24} />,
-    y: 242,
+    y: 172,
     title: "Image",
   },
   {
     color: "#0159b2",
     icon: <File size={24} />,
-    y: 312,
+    y: 242,
     title: "Document",
   },
   {
     color: "#013f7f",
     icon: <User size={24} />,
-    y: 382,
+    y: 312,
     title: "Contact",
   },
 ];
@@ -72,6 +75,7 @@ const ChatInput = ({
   setValue,
   value,
   inputRef,
+  onActionClick,
 }) => {
   const [openActions, setOpenActions] = React.useState(false);
 
@@ -99,7 +103,8 @@ const ChatInput = ({
                 <Tooltip placement="right" title={el.title}>
                   <Fab
                     onClick={() => {
-                      setOpenActions(!openActions);
+                      onActionClick?.(el.title);
+                      setOpenActions(false);
                     }}
                     sx={{
                       position: "absolute",
@@ -172,8 +177,11 @@ const Footer = () => {
   const [openPicker, setOpenPicker] = React.useState(false);
 
   const [value, setValue] = useState("");
-  const inputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
+  const inputRef = useRef(null);
+  const imageInputRef = useRef();
+  const fileInputRef = useRef();
   function handleEmojiClick(emoji) {
     const input = inputRef.current;
 
@@ -191,6 +199,14 @@ const Footer = () => {
       input.selectionStart = input.selectionEnd = selectionStart + 1;
     }
   }
+  const dispatch = useDispatch();
+
+  const handleSendMessage = () => {
+    if (!value.trim() && !selectedFile) return;
+    dispatch(sendDirectMessage(value, selectedFile));
+    setValue("");
+    setSelectedFile(null);
+  };
 
   return (
     <Box
@@ -236,6 +252,36 @@ const Footer = () => {
               setValue={setValue}
               openPicker={openPicker}
               setOpenPicker={setOpenPicker}
+              onActionClick={(title) => {
+                if (title === "Image") {
+                  imageInputRef.current?.click();
+                } else if (title === "Document") {
+                  fileInputRef.current?.click();
+                } else {
+                  console.log("Other action clicked:", title);
+                }
+              }}
+            />
+            <input
+              type="file"
+              accept="image/*,video/*,audio/*"
+              style={{ display: "none" }}
+              ref={imageInputRef}
+              onChange={(e) => {
+                setSelectedFile(e.target.files[0]);
+                e.target.value = ""; // Cho phép chọn lại cùng một file
+              }}
+            />
+
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt"
+              style={{ display: "none" }}
+              ref={fileInputRef}
+              onChange={(e) => {
+                setSelectedFile(e.target.files[0]);
+                e.target.value = ""; // Cho phép chọn lại cùng một file
+              }}
             />
           </Stack>
           <Box
@@ -244,29 +290,113 @@ const Footer = () => {
               width: 48,
               backgroundColor: theme.palette.primary.main,
               borderRadius: 1.5,
+              cursor: "pointer",
             }}
+            onClick={handleSendMessage}
           >
             <Stack
               sx={{ height: "100%" }}
               alignItems={"center"}
               justifyContent="center"
             >
-              <IconButton
-                onClick={() => {
-                  socket.emit("text_message", {
-                    message: linkify(value),
-                    conversation_id: room_id,
-                    from: user_id,
-                    to: current_conversation.user_id,
-                    type: containsUrl(value) ? "Link" : "Text",
-                  });
-                }}
-              >
+              <IconButton>
                 <PaperPlaneTilt color="#ffffff" />
               </IconButton>
             </Stack>
           </Box>
         </Stack>
+        {selectedFile && (
+          <Box
+            sx={{
+              padding: 2,
+              borderWidth: 1,
+              borderRadius: "8px",
+              backgroundColor: "gray.100",
+              maxWidth: "100px",
+              borderColor: "gray.300",
+              position: "relative",
+            }}
+          >
+            {/* Nút "Xóa" nằm ở góc trên bên phải */}
+            <IconButton
+              onClick={() => setSelectedFile(null)}
+              sx={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                zIndex: 1,
+              }}
+              variant="ghost"
+              size="small"
+            >
+              <Trash />
+            </IconButton>
+
+            {/* Hiển thị ảnh nếu là file ảnh */}
+            {selectedFile.type.startsWith("image/") ? (
+              <img
+                src={URL.createObjectURL(selectedFile)}
+                alt="preview"
+                style={{
+                  maxHeight: "100px",
+                  borderRadius: "8px",
+                  objectFit: "cover", // Đảm bảo ảnh không bị kéo dài
+                }}
+              />
+            ) : selectedFile.type.startsWith("video/") ? (
+              <Box sx={{ textAlign: "center" }}>
+                <video
+                  controls
+                  // src={URL.createObjectURL(selectedFile)}
+                  style={{
+                    maxHeight: "100px",
+                    borderRadius: "8px",
+                    objectFit: "cover",
+                  }}
+                />
+
+                {/* Hiển thị tên file video */}
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    mt: 1,
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  ▶{selectedFile.name}
+                </Typography>
+              </Box>
+            ) : selectedFile.type.startsWith("audio/") ? (
+              <Box sx={{ textAlign: "center" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1rem",
+                    mt: 1,
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  🎵{selectedFile.name}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography
+                sx={{
+                  fontSize: "1rem",
+                  mt: 1,
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                🔗{selectedFile.name}
+              </Typography>
+            )}
+          </Box>
+        )}
       </Box>
     </Box>
   );

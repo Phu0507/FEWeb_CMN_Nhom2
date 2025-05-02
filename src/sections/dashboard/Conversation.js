@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import truncateString from "../../utils/truncate";
 import { LinkPreview } from "@dhaiwat10/react-link-preview";
 import Embed from "react-embed";
+const user_id = localStorage.getItem("user_id");
 
 const MessageOption = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -54,26 +55,28 @@ const MessageOption = () => {
   );
 };
 
-const TextMsg = ({ el, menu }) => {
+const TextMsg = ({ m, menu }) => {
   const theme = useTheme();
+
   return (
-    <Stack direction="row" justifyContent={el.incoming ? "start" : "end"}>
+    <Stack direction="row">
       <Box
         px={1.5}
         py={1.5}
         sx={{
-          backgroundColor: el.incoming
-            ? alpha(theme.palette.background.default, 1)
-            : theme.palette.primary.main,
+          backgroundColor:
+            m.sender._id === user_id
+              ? theme.palette.primary.main
+              : alpha(theme.palette.background.default, 1),
           borderRadius: 1.5,
           width: "max-content",
         }}
       >
         <Typography
           variant="body2"
-          color={el.incoming ? theme.palette.text : "#fff"}
+          color={m.sender._id === user_id ? "#fff" : theme.palette.text}
         >
-          {el.message}
+          {m.content}
         </Typography>
       </Box>
       {menu && <MessageOption />}
@@ -259,4 +262,12 @@ const Timeline = ({ el }) => {
   );
 };
 
-export { Timeline, MediaMsg, LinkMsg, DocMsg, TextMsg, ReplyMsg };
+export {
+  Timeline,
+  MediaMsg,
+  LinkMsg,
+  DocMsg,
+  TextMsg,
+  ReplyMsg,
+  MessageOption,
+};

@@ -72,11 +72,11 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
       onClick={() => {
         dispatch(SelectConversation({ room_id: id }));
         dispatch(SetCurrentConversation({ conversation }));
-        dispatch(getCurrentMessagesFromServer(id));
-        localStorage.setItem("current_conversation_id", id);
-        console.log("chatid", id);
-        console.log("room", room_id);
-        console.log(conversation);
+        // dispatch(getCurrentMessagesFromServer(id));
+        // localStorage.setItem("current_conversation_id", id);
+        // console.log("chatid", id);
+        // console.log("room", room_id);
+        // console.log(conversation);
       }}
       sx={{
         width: "100%",
@@ -112,7 +112,18 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
             <Avatar alt={name} src={img} />
           )}
           <Stack spacing={0.3}>
-            <Typography variant="subtitle2">{name}</Typography>
+            <Typography
+              noWrap
+              sx={{
+                maxWidth: "130px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              variant="subtitle2"
+            >
+              {name}
+            </Typography>
             <Typography variant="caption">{truncateText(msg, 20)}</Typography>
           </Stack>
         </Stack>
