@@ -138,6 +138,15 @@ const slice = createSlice({
           (msg) => msg._id !== messageId
         );
     },
+    editDirectMessage(state, action) {
+      const { messageId, newContent } = action.payload;
+      state.direct_chat.current_messages =
+        state.direct_chat.current_messages.map((msg) =>
+          msg._id === messageId
+            ? { ...msg, content: newContent, isEdited: true }
+            : msg
+        );
+    },
   },
 });
 
@@ -179,14 +188,20 @@ export const AddDirectMessage = (message) => {
     dispatch(slice.actions.addDirectMessage({ message }));
   };
 };
-
+// new export
 export const RecallDirectMessage = (messageId) => {
   return (dispatch) => {
     dispatch(slice.actions.recallDirectMessage({ messageId }));
   };
 };
 
-//new
+export const EditDirectMessage = (messageId, newContent) => {
+  return async (dispatch, getState) => {
+    dispatch(slice.actions.editDirectMessage({ messageId, newContent }));
+  };
+};
+
+//new api
 export const getConversationsFromServer = () => {
   return async (dispatch, getState) => {
     try {
@@ -324,7 +339,7 @@ export const recallMessage = (messageId) => {
   };
 };
 
-export const deleteMessageForMe = (messageId) => {
+export const deleteMessage = (messageId) => {
   return async (dispatch, getState) => {
     try {
       const state = getState();
@@ -337,6 +352,29 @@ export const deleteMessageForMe = (messageId) => {
       dispatch(slice.actions.deleteMessageForMe(messageId));
     } catch (err) {
       alert(err.response?.data?.message || "Lỗi xóa tin nhắn");
+    }
+  };
+};
+
+export const editMessage = (messageId, newContent) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const response = await axios.put(
+        `http://localhost:5000/api/message/edit/${messageId}`,
+        { content: newContent },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Response from API:", response);
+
+      if (response.status === 200) {
+        dispatch(slice.actions.editDirectMessage({ messageId, newContent }));
+      }
+      socket.emit("messageEdited", response.data);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật tin nhắn:", error);
     }
   };
 };

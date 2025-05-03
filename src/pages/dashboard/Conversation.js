@@ -22,7 +22,9 @@ import {
   AddDirectMessage,
   recallMessage,
   RecallDirectMessage,
-  deleteMessageForMe,
+  deleteMessage,
+  editMessage,
+  EditDirectMessage,
 } from "../../redux/slices/conversation";
 import { socket } from "../../socket";
 import {
@@ -63,8 +65,32 @@ const Conversation = ({ isMobile, menu }) => {
   };
 
   const handDeleteMessageForMe = (messageId) => {
-    dispatch(deleteMessageForMe(messageId));
+    dispatch(deleteMessage(messageId));
   };
+
+  //new
+  const user_id = localStorage.getItem("user_id");
+  const [hoveredMsgId, setHoveredMsgId] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [newContent, setNewContent] = useState("");
+  const [isOpen, setIsOpen] = useState(false); // Mở lightbox
+  const [photoIndex, setPhotoIndex] = useState(0); // Chỉ số ảnh trong lightbox
+  let shownDates = new Set();
+  const handleEditMessage = (message) => {
+    setEditingMessage(message);
+    setNewContent(message.content);
+  };
+
+  const handleSaveEditedMessage = () => {
+    if (newContent.trim() === "") return;
+    dispatch(editMessage(editingMessage._id, newContent));
+    setEditingMessage(null);
+    setNewContent("");
+  };
+
+  const imageMessages = current_messages.filter(
+    (msg) => msg.type === "image" && msg.fileUrl && !msg.isRecalled
+  );
 
   useEffect(() => {
     dispatch(getCurrentMessagesFromServer(room_id));
@@ -74,32 +100,25 @@ const Conversation = ({ isMobile, menu }) => {
         dispatch(AddDirectMessage(message));
       }
     };
+
     const handleRecallMessage = (updatedMsg) => {
       dispatch(RecallDirectMessage(updatedMsg._id));
     };
+
+    const handleEdit = (updatedMsg) => {
+      dispatch(EditDirectMessage(updatedMsg._id, updatedMsg.content));
+    };
+
     socket.on("messageReceived", handleMessage);
     socket.on("messageRecalled", handleRecallMessage);
+    socket.on("messageEdited", handleEdit);
+
     return () => {
       socket.off("messageReceived", handleMessage);
       socket.off("messageRecalled", handleRecallMessage);
+      socket.off("messageEdited", handleEdit);
     };
   }, [dispatch, room_id, current_conversation?.id]);
-
-  //new
-  const user_id = localStorage.getItem("user_id");
-  const [hoveredMsgId, setHoveredMsgId] = useState(null);
-  const [editingMessage, setEditingMessage] = useState(null);
-  const [isOpen, setIsOpen] = useState(false); // Mở lightbox
-  const [photoIndex, setPhotoIndex] = useState(0); // Chỉ số ảnh trong lightbox
-  let shownDates = new Set();
-  const handleEditMessage = (message) => {
-    // setEditingMessage(message);
-    // setNewContent(message.content);
-  };
-
-  const imageMessages = current_messages.filter(
-    (msg) => msg.type === "image" && msg.fileUrl && !msg.isRecalled
-  );
 
   return (
     <Box p={isMobile ? 1 : 3}>
@@ -297,10 +316,8 @@ const Conversation = ({ isMobile, menu }) => {
                           {editingMessage?._id === m._id ? (
                             <>
                               <input
-                                // value={newContent}
-                                // onChange={(e) =>
-                                //   setNewContent(e.target.value)
-                                // }
+                                value={newContent}
+                                onChange={(e) => setNewContent(e.target.value)}
                                 style={{
                                   width: "100%",
                                   padding: "8px",
@@ -319,7 +336,7 @@ const Conversation = ({ isMobile, menu }) => {
                                 }}
                               >
                                 <button
-                                  // onClick={handleSaveEditedMessage}
+                                  onClick={handleSaveEditedMessage}
                                   style={{
                                     backgroundColor: "#3182CE",
                                     color: "white",
@@ -333,7 +350,7 @@ const Conversation = ({ isMobile, menu }) => {
                                 <button
                                   onClick={() => {
                                     setEditingMessage(null);
-                                    // setNewContent("");
+                                    setNewContent("");
                                   }}
                                   style={{
                                     backgroundColor: "#e53e3e",
@@ -377,14 +394,17 @@ const Conversation = ({ isMobile, menu }) => {
                               `}
                               </style>
                               {m.isEdited && (
-                                <span
-                                  style={{
-                                    fontSize: "11px",
-                                    color: "#718096",
-                                  }}
+                                <Typography
+                                  variant="body2"
+                                  fontSize="11px"
+                                  color={
+                                    m.sender._id === user_id
+                                      ? "#fff"
+                                      : theme.palette.text
+                                  }
                                 >
                                   (Đã chỉnh sửa)
-                                </span>
+                                </Typography>
                               )}
                             </>
                           )}
