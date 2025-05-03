@@ -37,6 +37,7 @@ const slice = createSlice({
             time: "9:37",
             unread: 2,
             pinned: false,
+            isGroup: el.isGroupChat,
             groupAdmin: el.groupAdmin?._id,
           };
         } else {

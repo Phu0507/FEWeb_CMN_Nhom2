@@ -25,6 +25,7 @@ import {
   Trash,
   VideoCamera,
   X,
+  Users,
 } from "phosphor-react";
 import useResponsive from "../../hooks/useResponsive";
 import AntSwitch from "../../components/AntSwitch";
@@ -84,7 +85,9 @@ const DeleteChatDialog = ({ open, handleClose }) => {
 const Contact = () => {
   const dispatch = useDispatch();
 
-  const {current_conversation} = useSelector((state) => state.conversation.direct_chat);
+  const { current_conversation, current_messages } = useSelector(
+    (state) => state.conversation.direct_chat
+  );
 
   const theme = useTheme();
 
@@ -95,9 +98,22 @@ const Contact = () => {
 
   const handleCloseBlock = () => {
     setOpenBlock(false);
-  }
+  };
   const handleCloseDelete = () => {
     setOpenDelete(false);
+  };
+
+  const latest3Media = [];
+  for (let i = current_messages.length - 1; i >= 0; i--) {
+    const msg = current_messages[i];
+    if (
+      ["image", "video"].includes(msg.type) &&
+      msg.fileUrl &&
+      !msg.isRecalled
+    ) {
+      latest3Media.push(msg);
+      if (latest3Media.length === 3) break;
+    }
   }
 
   return (
@@ -175,15 +191,33 @@ const Contact = () => {
             </Stack>
           </Stack>
           <Divider />
-          <Stack spacing={0.5}>
-            <Typography variant="article" fontWeight={600}>
-              About
-            </Typography>
-            <Typography variant="body2" fontWeight={500}>
-              {current_conversation?.about}
-            </Typography>
-          </Stack>
-          <Divider />
+          {current_conversation?.isGroup && (
+            <>
+              <Stack spacing={0.2}>
+                <Typography variant="article" fontWeight={600}>
+                  Members
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  sx={{
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: theme.palette.primary.main,
+                    },
+                    width: "120px",
+                  }}
+                >
+                  <Users size={20} />
+                  <Typography variant="body2" fontWeight={500}>
+                    {(current_conversation?.user_id?.length || 0) + 1} members
+                  </Typography>
+                </Stack>
+              </Stack>
+              <Divider />
+            </>
+          )}
           <Stack
             direction="row"
             alignItems="center"
@@ -196,13 +230,42 @@ const Contact = () => {
               }}
               endIcon={<CaretRight />}
             >
-              401
+              All
             </Button>
           </Stack>
-          <Stack direction={"row"} alignItems="center" spacing={2}>
-            {[1, 2, 3].map((el) => (
-              <Box>
-                <img src={faker.image.city()} alt={faker.internet.userName()} />
+          <Stack direction={"row"} alignItems="center" spacing={1}>
+            {latest3Media.map((msg, index) => (
+              <Box
+                key={index}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "grey.300",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
+              >
+                {msg.type === "image" && (
+                  <img
+                    src={msg.fileUrl}
+                    alt={`Image ${index + 1}`}
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
+                {msg.type === "video" && (
+                  <video
+                    src={msg.fileUrl}
+                    controls
+                    style={{
+                      width: "100%",
+                      height: "100px",
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
               </Box>
             ))}
           </Stack>
@@ -274,8 +337,12 @@ const Contact = () => {
           </Stack>
         </Stack>
       </Stack>
-      {openBlock && <BlockDialog open={openBlock} handleClose={handleCloseBlock} />}
-      {openDelete && <DeleteChatDialog open={openDelete} handleClose={handleCloseDelete} />}
+      {openBlock && (
+        <BlockDialog open={openBlock} handleClose={handleCloseBlock} />
+      )}
+      {openDelete && (
+        <DeleteChatDialog open={openDelete} handleClose={handleCloseDelete} />
+      )}
     </Box>
   );
 };

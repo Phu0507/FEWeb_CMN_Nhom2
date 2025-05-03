@@ -13,7 +13,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { CaretDown, MagnifyingGlass, Phone, VideoCamera } from "phosphor-react";
+import {
+  CaretDown,
+  MagnifyingGlass,
+  Phone,
+  VideoCamera,
+  User,
+} from "phosphor-react";
 import { faker } from "@faker-js/faker";
 import useResponsive from "../../hooks/useResponsive";
 import { ToggleSidebar } from "../../redux/slices/app";
@@ -103,14 +109,12 @@ const ChatHeader = () => {
           sx={{ width: "100%", height: "100%" }}
           justifyContent="space-between"
         >
-          <Stack
-            onClick={() => {
-              dispatch(ToggleSidebar());
-            }}
-            spacing={2}
-            direction="row"
-          >
-            <Box>
+          <Stack spacing={2} direction="row">
+            <Box
+              onClick={() => {
+                dispatch(ToggleSidebar());
+              }}
+            >
               <StyledBadge
                 overlap="circular"
                 anchorOrigin={{
@@ -118,6 +122,7 @@ const ChatHeader = () => {
                   horizontal: "right",
                 }}
                 variant="dot"
+                sx={{ cursor: "pointer" }}
               >
                 <Avatar
                   alt={current_conversation?.name}
@@ -129,7 +134,37 @@ const ChatHeader = () => {
               <Typography variant="subtitle2">
                 {current_conversation?.name}
               </Typography>
-              <Typography variant="caption">Online</Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: current_conversation?.isGroup ? "pointer" : "default",
+                  "&:hover": {
+                    color: (theme) =>
+                      current_conversation?.isGroup
+                        ? theme.palette.primary.main
+                        : "theme.palette.text",
+                  },
+                }}
+                onClick={
+                  current_conversation?.isGroup
+                    ? () => {
+                        // thực hiện mở modal hoặc danh sách thành viên
+                      }
+                    : undefined
+                }
+              >
+                {current_conversation?.isGroup ? (
+                  <>
+                    <User size={14} style={{ marginRight: 4 }} />
+                    <Typography variant="caption">
+                      {(current_conversation?.user_id?.length || 0) + 1} members
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography variant="caption">Online</Typography>
+                )}
+              </Box>
             </Stack>
           </Stack>
           <Stack
@@ -192,7 +227,17 @@ const ChatHeader = () => {
               <Box p={1}>
                 <Stack spacing={1}>
                   {Conversation_Menu.map((el) => (
-                    <MenuItem onClick={handleCloseConversationMenu}>
+                    <MenuItem
+                      key={el.title}
+                      onClick={() => {
+                        handleCloseConversationMenu();
+                        if (el.title === "Contact info") {
+                          setTimeout(() => {
+                            dispatch(ToggleSidebar());
+                          }, 200);
+                        }
+                      }}
+                    >
                       <Stack
                         sx={{ minWidth: 100 }}
                         direction="row"
