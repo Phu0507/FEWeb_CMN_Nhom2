@@ -27,7 +27,10 @@ import {
 import Friends from "../../sections/dashboard/Friends";
 import { socket } from "../../socket";
 import { useDispatch, useSelector } from "react-redux";
-import { getConversationsFromServer } from "../../redux/slices/conversation";
+import {
+  getConversationsFromServer,
+  GroupChatUpdated,
+} from "../../redux/slices/conversation";
 
 const user_id = window.localStorage.getItem("user_id");
 
@@ -37,14 +40,14 @@ const Chats = () => {
 
   const dispatch = useDispatch();
 
-  const { conversations } = useSelector(
+  const { conversations, fetchAgain } = useSelector(
     (state) => state.conversation.direct_chat
   );
   // console.log("chat", conversations);
 
   useEffect(() => {
     dispatch(getConversationsFromServer());
-  }, [dispatch]);
+  }, [fetchAgain, dispatch]);
 
   // useEffect(() => {
   //   const savedId = localStorage.getItem("current_conversation_id");
@@ -56,6 +59,19 @@ const Chats = () => {
   //     }
   //   }
   // }, [dispatch, conversations]);
+
+  useEffect(() => {
+    // socket.emit("setup", user_id);
+    const handleGroupUpdated = (updatedChat) => {
+      dispatch(GroupChatUpdated(updatedChat));
+    };
+
+    socket.on("group:updated", handleGroupUpdated);
+
+    return () => {
+      socket.off("group:updated", handleGroupUpdated);
+    };
+  }, [dispatch]);
 
   const [openDialog, setOpenDialog] = useState(false);
 

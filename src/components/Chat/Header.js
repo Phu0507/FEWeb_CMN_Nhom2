@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Avatar,
   Badge,
@@ -19,6 +19,7 @@ import {
   Phone,
   VideoCamera,
   User,
+  PencilLine,
 } from "phosphor-react";
 import { faker } from "@faker-js/faker";
 import useResponsive from "../../hooks/useResponsive";
@@ -26,6 +27,7 @@ import { ToggleSidebar } from "../../redux/slices/app";
 import { useDispatch, useSelector } from "react-redux";
 import { StartAudioCall } from "../../redux/slices/audioCall";
 import { StartVideoCall } from "../../redux/slices/videoCall";
+import RenameGroup from "../../sections/dashboard/RenameGroup";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -75,6 +77,16 @@ const ChatHeader = () => {
   const dispatch = useDispatch();
   const isMobile = useResponsive("between", "md", "xs", "sm");
   const theme = useTheme();
+
+  const [hovered, setHovered] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
 
   const { current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
@@ -131,9 +143,35 @@ const ChatHeader = () => {
               </StyledBadge>
             </Box>
             <Stack spacing={0.2}>
-              <Typography variant="subtitle2">
-                {current_conversation?.name}
-              </Typography>
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={1}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+              >
+                <Typography variant="subtitle2">
+                  {current_conversation?.name}
+                </Typography>
+                {current_conversation?.isGroup && (
+                  <>
+                    {hovered && (
+                      <IconButton
+                        size="small"
+                        onClick={handleOpenDialog}
+                        sx={{
+                          padding: "2px",
+                          "&:hover": {
+                            color: theme.palette.primary.main,
+                          },
+                        }}
+                      >
+                        <PencilLine />
+                      </IconButton>
+                    )}
+                  </>
+                )}
+              </Box>
               <Box
                 sx={{
                   display: "flex",
@@ -254,6 +292,14 @@ const ChatHeader = () => {
           </Stack>
         </Stack>
       </Box>
+      {openDialog && (
+        <RenameGroup
+          open={openDialog}
+          handleClose={handleCloseDialog}
+          groupName={current_conversation?.name}
+          chatId={current_conversation?.id}
+        />
+      )}
     </>
   );
 };

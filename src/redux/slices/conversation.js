@@ -11,8 +11,9 @@ const initialState = {
     conversations: [],
     current_conversation: null,
     current_messages: [],
+    fetchAgain: false, // thêm dòng này
   },
-  group_chat: {},
+  // group_chat: {},
 };
 
 const slice = createSlice({
@@ -148,6 +149,33 @@ const slice = createSlice({
             : msg
         );
     },
+
+    //new
+    toggleFetchAgain(state) {
+      state.direct_chat.fetchAgain = !state.direct_chat.fetchAgain;
+    },
+
+    groupChatUpdated(state, action) {
+      const updatedChat = action.payload.updatedChat;
+
+      console.log("update", updatedChat);
+      const alreadyExists = state.direct_chat.conversations.some(
+        (chat) => chat.id === updatedChat._id
+      );
+
+      state.direct_chat.conversations = alreadyExists
+        ? state.direct_chat.conversations.map((chat) =>
+            chat.id === updatedChat._id ? updatedChat : chat
+          )
+        : [updatedChat, ...state.direct_chat.conversations];
+
+      if (
+        state.direct_chat.current_conversation &&
+        state.direct_chat.current_conversation.id === updatedChat._id
+      ) {
+        state.direct_chat.current_conversation = updatedChat;
+      }
+    },
   },
 });
 
@@ -199,6 +227,18 @@ export const RecallDirectMessage = (messageId) => {
 export const EditDirectMessage = (messageId, newContent) => {
   return async (dispatch, getState) => {
     dispatch(slice.actions.editDirectMessage({ messageId, newContent }));
+  };
+};
+
+export const ToggleFetchAgain = () => {
+  return (dispatch) => {
+    dispatch(slice.actions.toggleFetchAgain());
+  };
+};
+
+export const GroupChatUpdated = (updatedChat) => {
+  return (dispatch) => {
+    dispatch(slice.actions.groupChatUpdated({ updatedChat }));
   };
 };
 
@@ -376,6 +416,31 @@ export const editMessage = (messageId, newContent) => {
       socket.emit("messageEdited", response.data);
     } catch (error) {
       console.error("Lỗi khi cập nhật tin nhắn:", error);
+    }
+  };
+};
+
+export const renameGroup = (newName, chatId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const response = await axios.put(
+        "http://localhost:5000/api/chat/rename",
+        {
+          chatId: chatId,
+          chatName: newName,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Response from API:", response.data);
+
+      // dispatch(SetCurrentConversation(response.data));
+      dispatch(ToggleFetchAgain());
+      socket.emit("group:updated", response.data);
+    } catch (error) {
+      console.error("Chỉ trưởng nhóm mới đổi tên:", error);
     }
   };
 };

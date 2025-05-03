@@ -43,9 +43,8 @@ const Conversation = ({ isMobile, menu }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  const { conversations, current_messages, current_conversation } = useSelector(
-    (state) => state.conversation.direct_chat
-  );
+  const { conversations, current_messages, current_conversation, fetchAgain } =
+    useSelector((state) => state.conversation.direct_chat);
   const { room_id } = useSelector((state) => state.app);
 
   // useEffect(() => {
