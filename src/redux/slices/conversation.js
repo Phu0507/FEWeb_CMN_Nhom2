@@ -124,6 +124,20 @@ const slice = createSlice({
     addDirectMessage(state, action) {
       state.direct_chat.current_messages.push(action.payload.message);
     },
+    recallDirectMessage(state, action) {
+      const messageId = action.payload.messageId;
+      state.direct_chat.current_messages =
+        state.direct_chat.current_messages.map((msg) =>
+          msg._id === messageId ? { ...msg, isRecalled: true } : msg
+        );
+    },
+    deleteMessageForMe(state, action) {
+      const messageId = action.payload;
+      state.direct_chat.current_messages =
+        state.direct_chat.current_messages.filter(
+          (msg) => msg._id !== messageId
+        );
+    },
   },
 });
 
@@ -163,6 +177,12 @@ export const FetchCurrentMessages = ({ messages }) => {
 export const AddDirectMessage = (message) => {
   return async (dispatch, getState) => {
     dispatch(slice.actions.addDirectMessage({ message }));
+  };
+};
+
+export const RecallDirectMessage = (messageId) => {
+  return (dispatch) => {
+    dispatch(slice.actions.recallDirectMessage({ messageId }));
   };
 };
 
@@ -250,6 +270,73 @@ export const sendDirectMessage = (message, selectedFile) => {
       socket.emit("newMessage", response.data);
     } catch (error) {
       console.error("Lỗi khi gửi tin nhắn:", error);
+    }
+  };
+};
+
+export const recallMessage = (messageId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+      const messages = state.conversation.direct_chat.current_messages;
+      const message = messages.find((msg) => msg._id === messageId);
+
+      if (!message) {
+        alert("Không tìm thấy tin nhắn.");
+        return;
+      }
+
+      if (message.isRecalled) {
+        alert("Tin nhắn này đã được thu hồi rồi.");
+        return;
+      }
+
+      const messageDate = new Date(message.createdAt);
+      const today = new Date();
+
+      const isSameDay =
+        messageDate.getDate() === today.getDate() &&
+        messageDate.getMonth() === today.getMonth() &&
+        messageDate.getFullYear() === today.getFullYear();
+
+      if (!isSameDay) {
+        alert("Bạn chỉ có thể thu hồi tin nhắn trong ngày.");
+        return;
+      }
+
+      await axios.put(
+        `/api/message/recall/${messageId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      dispatch(slice.actions.recallDirectMessage({ messageId }));
+
+      socket.emit("recallMessage", { _id: messageId });
+    } catch (err) {
+      const msg = err.response?.data?.message || "Lỗi thu hồi tin nhắn";
+      alert(msg);
+      console.error("Error recalling message:", err);
+    }
+  };
+};
+
+export const deleteMessageForMe = (messageId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+      await axios.put(
+        `http://localhost:5000/api/message/delete-for-me/${messageId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      dispatch(slice.actions.deleteMessageForMe(messageId));
+    } catch (err) {
+      alert(err.response?.data?.message || "Lỗi xóa tin nhắn");
     }
   };
 };

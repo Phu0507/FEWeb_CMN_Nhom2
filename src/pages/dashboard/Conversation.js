@@ -20,6 +20,9 @@ import {
   SetCurrentConversation,
   getCurrentMessagesFromServer,
   AddDirectMessage,
+  recallMessage,
+  RecallDirectMessage,
+  deleteMessageForMe,
 } from "../../redux/slices/conversation";
 import { socket } from "../../socket";
 import {
@@ -38,7 +41,7 @@ const Conversation = ({ isMobile, menu }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  const { conversations, current_messages } = useSelector(
+  const { conversations, current_messages, current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
   );
   const { room_id } = useSelector((state) => state.app);
@@ -54,18 +57,33 @@ const Conversation = ({ isMobile, menu }) => {
 
   //   dispatch(SetCurrentConversation(current));
   // }, []);
+
+  const handleRecall = (messageId) => {
+    dispatch(recallMessage(messageId));
+  };
+
+  const handDeleteMessageForMe = (messageId) => {
+    dispatch(deleteMessageForMe(messageId));
+  };
+
   useEffect(() => {
     dispatch(getCurrentMessagesFromServer(room_id));
     socket.emit("joinChat", room_id);
     const handleMessage = (message) => {
-      dispatch(AddDirectMessage(message));
+      if (message.chat._id === current_conversation?.id) {
+        dispatch(AddDirectMessage(message));
+      }
+    };
+    const handleRecallMessage = (updatedMsg) => {
+      dispatch(RecallDirectMessage(updatedMsg._id));
     };
     socket.on("messageReceived", handleMessage);
-
+    socket.on("messageRecalled", handleRecallMessage);
     return () => {
       socket.off("messageReceived", handleMessage);
+      socket.off("messageRecalled", handleRecallMessage);
     };
-  }, [dispatch, room_id]);
+  }, [dispatch, room_id, current_conversation?.id]);
 
   //new
   const user_id = localStorage.getItem("user_id");
@@ -204,7 +222,7 @@ const Conversation = ({ isMobile, menu }) => {
                       }}
                     >
                       <button
-                        // onClick={() => recallMessage(m._id)}
+                        onClick={() => handleRecall(m._id)}
                         style={{
                           fontSize: "12px",
                           padding: "4px 6px",
@@ -217,7 +235,7 @@ const Conversation = ({ isMobile, menu }) => {
                         Thu hồi
                       </button>
                       <button
-                        // onClick={() => deleteMessageForMe(m._id)}
+                        onClick={() => handDeleteMessageForMe(m._id)}
                         style={{
                           fontSize: "12px",
                           padding: "4px 6px",
