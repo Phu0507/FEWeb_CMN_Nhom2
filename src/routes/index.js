@@ -1,4 +1,5 @@
 import { Suspense, lazy } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, useRoutes } from "react-router-dom";
 
 // layouts
@@ -8,7 +9,25 @@ import AuthLayout from "../layouts/auth";
 // config
 import { DEFAULT_PATH } from "../config";
 import LoadingScreen from "../components/LoadingScreen";
+// const Loadable = (Component) => {
+//   return function LoadableComponent(props) {
+//     const [showComponent, setShowComponent] = React.useState(false);
 
+//     React.useEffect(() => {
+//       const timer = setTimeout(() => {
+//         setShowComponent(true);
+//       }, 5000);
+
+//       return () => clearTimeout(timer);
+//     }, []);
+
+//     if (!showComponent) {
+//       return <LoadingScreen />;
+//     }
+
+//     return <Component {...props} />;
+//   };
+// };
 const Loadable = (Component) => (props) => {
   return (
     <Suspense fallback={<LoadingScreen />}>

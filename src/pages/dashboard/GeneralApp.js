@@ -7,17 +7,25 @@ import ChatComponent from "./Conversation";
 import Chats from "./Chats";
 import Contact from "../../sections/dashboard/Contact";
 import NoChat from "../../assets/Illustration/NoChat";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import StarredMessages from "../../sections/dashboard/StarredMessages";
 import Media from "../../sections/dashboard/SharedMessages";
 import MembersGroup from "../../sections/dashboard/MembersGroup";
+import { ToggleSidebar } from "../../redux/slices/app";
 
 const GeneralApp = () => {
   const [searchParams] = useSearchParams();
-
+  const dispatch = useDispatch();
   const theme = useTheme();
 
   const { sideBar, room_id, chat_type } = useSelector((state) => state.app);
+  const { current_conversation } = useSelector(
+    (state) => state.conversation.direct_chat
+  );
+
+  if (current_conversation === null && sideBar.open === true) {
+    dispatch(ToggleSidebar());
+  }
 
   return (
     <>
@@ -40,7 +48,7 @@ const GeneralApp = () => {
                 : "0px solid #0162C4",
           }}
         >
-          {chat_type === "individual" && room_id !== null ? (
+          {chat_type === "individual" && current_conversation !== null ? (
             <ChatComponent />
           ) : (
             <Stack

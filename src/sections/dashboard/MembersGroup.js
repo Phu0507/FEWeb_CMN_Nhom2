@@ -20,7 +20,10 @@ import { UpdateSidebarType } from "../../redux/slices/app";
 import { faker } from "@faker-js/faker";
 import { DocMsg, LinkMsg } from "./Conversation";
 import { Shared_docs, Shared_links } from "../../data";
-import { transferGroupAdmin } from "../../redux/slices/conversation";
+import {
+  transferGroupAdmin,
+  removeGroupMember,
+} from "../../redux/slices/conversation";
 
 const MembersGroup = () => {
   const dispatch = useDispatch();
@@ -74,6 +77,9 @@ const MembersGroup = () => {
     if (action === 1) {
       dispatch(transferGroupAdmin(selectedChat, selectedUser));
       console.log("thanh cong");
+    } else if (action === 2) {
+      dispatch(removeGroupMember(selectedChat, selectedUser));
+      console.log("xoa thanh công");
     }
     handleMenuClose();
   };
@@ -154,7 +160,7 @@ const MembersGroup = () => {
                     </Typography>
                     {user._id === conversation.groupAdmin && (
                       <Badge
-                        badgeContent={"Leader"}
+                        badgeContent={"Admin"}
                         sx={{
                           "& .MuiBadge-badge": {
                             fontSize: 10,

@@ -31,6 +31,7 @@ import {
   getConversationsFromServer,
   GroupChatUpdated,
   UpdateGroupAdmin,
+  RemoveConversation,
 } from "../../redux/slices/conversation";
 
 const user_id = window.localStorage.getItem("user_id");
@@ -73,6 +74,7 @@ const Chats = () => {
       socket.off("admin:transferred");
     };
   }, [dispatch]);
+
   useEffect(() => {
     const handleGroupUpdated = (updatedChat) => {
       // console.log("test socket");
@@ -83,6 +85,17 @@ const Chats = () => {
 
     return () => {
       socket.off("group:updated", handleGroupUpdated);
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleRemove = (chatId) => {
+      console.log("test socket xoa");
+      dispatch(RemoveConversation(chatId));
+    };
+    socket.on("group:removed", handleRemove);
+    return () => {
+      socket.off("group:removed");
     };
   }, [dispatch]);
 

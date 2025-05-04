@@ -183,8 +183,8 @@ const slice = createSlice({
     updateGroupAdmin: (state, action) => {
       const chatId = action.payload.chatId;
       const newAdminId = action.payload.newAdminId;
-      console.log("chattttt", chatId);
-      console.log("chattttt minnnn", newAdminId);
+      // console.log("chattttt", chatId);
+      // console.log("chattttt minnnn", newAdminId);
       state.direct_chat.conversations = state.direct_chat.conversations.map(
         (chat) =>
           chat.id === chatId ? { ...chat, groupAdmin: newAdminId } : chat
@@ -197,9 +197,21 @@ const slice = createSlice({
         state.direct_chat.current_conversation.groupAdmin = newAdminId;
       }
     },
+    removeConversation: (state, action) => {
+      const chatId = action.payload.chatId;
+      console.log("hiiii", chatId);
+      // Xoá cuộc trò chuyện ra khỏi danh sách
+      state.direct_chat.conversations = state.direct_chat.conversations.filter(
+        (chat) => chat.id !== chatId
+      );
 
-    toggleFetchAgain: (state) => {
-      state.direct_chat.fetchAgain = !state.direct_chat.fetchAgain;
+      // Nếu cuộc trò chuyện hiện tại đang là cái bị xoá thì reset về null
+      if (
+        state.direct_chat.current_conversation &&
+        state.direct_chat.current_conversation.id === chatId
+      ) {
+        state.direct_chat.current_conversation = null;
+      }
     },
   },
 });
@@ -270,6 +282,12 @@ export const GroupChatUpdated = (updatedChat) => {
 export const UpdateGroupAdmin = (chatId, newAdminId) => {
   return (dispatch) => {
     dispatch(slice.actions.updateGroupAdmin(chatId, newAdminId));
+  };
+};
+
+export const RemoveConversation = (chatId) => {
+  return (dispatch) => {
+    dispatch(slice.actions.removeConversation({ chatId }));
   };
 };
 
@@ -494,11 +512,39 @@ export const transferGroupAdmin = (chatId, newAdminId) => {
         }
       );
 
-      console.log("Admin transferred:", response.data);
+      // console.log("Admin transferred:", response.data);
 
       dispatch(ToggleFetchAgain());
     } catch (error) {
       console.error("Lỗi khi chuyển quyền trưởng nhóm:", error);
+    }
+  };
+};
+
+export const removeGroupMember = (chatId, userId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const response = await axios.put(
+        "http://localhost:5000/api/chat/groupremove",
+        {
+          chatId: chatId,
+          userId: userId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // console.log("Member removed:", response.data);
+      socket.emit("group:updated", response.data);
+      dispatch(ToggleFetchAgain());
+    } catch (error) {
+      console.error("Lỗi khi xóa thành viên:", error);
     }
   };
 };
