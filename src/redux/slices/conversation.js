@@ -13,7 +13,6 @@ const initialState = {
     current_messages: [],
     fetchAgain: false, // thêm dòng này
   },
-  // group_chat: {},
 };
 
 const slice = createSlice({
@@ -29,7 +28,7 @@ const slice = createSlice({
         if (isGroup) {
           // Nếu là nhóm, trả về thông tin nhóm
           const usersData = el.users;
-          console.log("usersData", usersData);
+          // console.log("usersData", usersData);
           return {
             id: el._id,
             user_id: el.users,
@@ -181,6 +180,27 @@ const slice = createSlice({
         state.direct_chat.current_conversation = updatedChat;
       }
     },
+    updateGroupAdmin: (state, action) => {
+      const chatId = action.payload.chatId;
+      const newAdminId = action.payload.newAdminId;
+      console.log("chattttt", chatId);
+      console.log("chattttt minnnn", newAdminId);
+      state.direct_chat.conversations = state.direct_chat.conversations.map(
+        (chat) =>
+          chat.id === chatId ? { ...chat, groupAdmin: newAdminId } : chat
+      );
+
+      if (
+        state.direct_chat.current_conversation &&
+        state.direct_chat.current_conversation.id === chatId
+      ) {
+        state.direct_chat.current_conversation.groupAdmin = newAdminId;
+      }
+    },
+
+    toggleFetchAgain: (state) => {
+      state.direct_chat.fetchAgain = !state.direct_chat.fetchAgain;
+    },
   },
 });
 
@@ -244,6 +264,12 @@ export const ToggleFetchAgain = () => {
 export const GroupChatUpdated = (updatedChat) => {
   return (dispatch) => {
     dispatch(slice.actions.groupChatUpdated({ updatedChat }));
+  };
+};
+
+export const UpdateGroupAdmin = (chatId, newAdminId) => {
+  return (dispatch) => {
+    dispatch(slice.actions.updateGroupAdmin(chatId, newAdminId));
   };
 };
 

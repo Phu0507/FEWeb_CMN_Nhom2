@@ -30,6 +30,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getConversationsFromServer,
   GroupChatUpdated,
+  UpdateGroupAdmin,
 } from "../../redux/slices/conversation";
 
 const user_id = window.localStorage.getItem("user_id");
@@ -62,10 +63,19 @@ const Chats = () => {
 
   useEffect(() => {
     socket.emit("setup", user_id);
-  }, []);
+
+    const handleAdmin = (chatId, newAdminId) => {
+      console.log("test socket 888");
+      dispatch(UpdateGroupAdmin(chatId, newAdminId));
+    };
+    socket.on("admin:transferred", handleAdmin);
+    return () => {
+      socket.off("admin:transferred");
+    };
+  }, [dispatch]);
   useEffect(() => {
     const handleGroupUpdated = (updatedChat) => {
-      console.log("test socket");
+      // console.log("test socket");
       dispatch(GroupChatUpdated(updatedChat));
     };
 
