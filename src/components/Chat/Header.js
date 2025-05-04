@@ -23,7 +23,7 @@ import {
 } from "phosphor-react";
 import { faker } from "@faker-js/faker";
 import useResponsive from "../../hooks/useResponsive";
-import { ToggleSidebar } from "../../redux/slices/app";
+import { ToggleSidebar, UpdateSidebarType } from "../../redux/slices/app";
 import { useDispatch, useSelector } from "react-redux";
 import { StartAudioCall } from "../../redux/slices/audioCall";
 import { StartVideoCall } from "../../redux/slices/videoCall";
@@ -125,6 +125,7 @@ const ChatHeader = () => {
             <Box
               onClick={() => {
                 dispatch(ToggleSidebar());
+                dispatch(UpdateSidebarType("CONTACT"));
               }}
             >
               <StyledBadge
@@ -184,19 +185,18 @@ const ChatHeader = () => {
                         : "theme.palette.text",
                   },
                 }}
-                onClick={
-                  current_conversation?.isGroup
-                    ? () => {
-                        // thực hiện mở modal hoặc danh sách thành viên
-                      }
-                    : undefined
-                }
+                onClick={() => {
+                  if (current_conversation?.isGroup) {
+                    dispatch(ToggleSidebar());
+                    dispatch(UpdateSidebarType("MEMBERS"));
+                  }
+                }}
               >
                 {current_conversation?.isGroup ? (
                   <>
                     <User size={14} style={{ marginRight: 4 }} />
                     <Typography variant="caption">
-                      {(current_conversation?.user_id?.length || 0) + 1} members
+                      {current_conversation?.user_id?.length || 0} members
                     </Typography>
                   </>
                 ) : (
@@ -272,7 +272,8 @@ const ChatHeader = () => {
                         if (el.title === "Contact info") {
                           setTimeout(() => {
                             dispatch(ToggleSidebar());
-                          }, 200);
+                            dispatch(UpdateSidebarType("CONTACT"));
+                          }, 100);
                         }
                       }}
                     >

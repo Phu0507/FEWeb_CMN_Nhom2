@@ -10,6 +10,7 @@ import NoChat from "../../assets/Illustration/NoChat";
 import { useSelector } from "react-redux";
 import StarredMessages from "../../sections/dashboard/StarredMessages";
 import Media from "../../sections/dashboard/SharedMessages";
+import MembersGroup from "../../sections/dashboard/MembersGroup";
 
 const GeneralApp = () => {
   const [searchParams] = useSearchParams();
@@ -75,6 +76,9 @@ const GeneralApp = () => {
 
               case "SHARED":
                 return <Media />;
+
+              case "MEMBERS":
+                return <MembersGroup />;
 
               default:
                 break;

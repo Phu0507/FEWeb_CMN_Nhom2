@@ -61,8 +61,11 @@ const Chats = () => {
   // }, [dispatch, conversations]);
 
   useEffect(() => {
-    // socket.emit("setup", user_id);
+    socket.emit("setup", user_id);
+  }, []);
+  useEffect(() => {
     const handleGroupUpdated = (updatedChat) => {
+      console.log("test socket");
       dispatch(GroupChatUpdated(updatedChat));
     };
 

@@ -28,12 +28,11 @@ const slice = createSlice({
 
         if (isGroup) {
           // Nếu là nhóm, trả về thông tin nhóm
-          const userIds = el.users
-            .map((u) => u._id)
-            .filter((id) => id !== user_id);
+          const usersData = el.users;
+          console.log("usersData", usersData);
           return {
             id: el._id,
-            user_id: userIds,
+            user_id: el.users,
             name: el.chatName,
             time: "9:37",
             unread: 2,
@@ -156,22 +155,28 @@ const slice = createSlice({
     },
 
     groupChatUpdated(state, action) {
-      const updatedChat = action.payload.updatedChat;
-
+      const updatedChat = transformChatToConversation(
+        action.payload.updatedChat
+      );
       console.log("update", updatedChat);
+      console.log(
+        "update2",
+        JSON.parse(JSON.stringify(state.direct_chat.conversations))
+      );
+
       const alreadyExists = state.direct_chat.conversations.some(
-        (chat) => chat.id === updatedChat._id
+        (chat) => chat.id === updatedChat.id
       );
 
       state.direct_chat.conversations = alreadyExists
         ? state.direct_chat.conversations.map((chat) =>
-            chat.id === updatedChat._id ? updatedChat : chat
+            chat.id === updatedChat.id ? updatedChat : chat
           )
         : [updatedChat, ...state.direct_chat.conversations];
 
       if (
         state.direct_chat.current_conversation &&
-        state.direct_chat.current_conversation.id === updatedChat._id
+        state.direct_chat.current_conversation.id === updatedChat.id
       ) {
         state.direct_chat.current_conversation = updatedChat;
       }
@@ -434,7 +439,7 @@ export const renameGroup = (newName, chatId) => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Response from API:", response.data);
+      // console.log("Response from API:", response.data);
 
       // dispatch(SetCurrentConversation(response.data));
       dispatch(ToggleFetchAgain());
@@ -442,5 +447,45 @@ export const renameGroup = (newName, chatId) => {
     } catch (error) {
       console.error("Chỉ trưởng nhóm mới đổi tên:", error);
     }
+  };
+};
+
+export const transferGroupAdmin = (chatId, newAdminId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const response = await axios.put(
+        `http://localhost:5000/api/chat/transferAdmin/${chatId}`,
+        {
+          newAdminId: newAdminId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Admin transferred:", response.data);
+
+      dispatch(ToggleFetchAgain());
+    } catch (error) {
+      console.error("Lỗi khi chuyển quyền trưởng nhóm:", error);
+    }
+  };
+};
+
+const transformChatToConversation = (chat) => {
+  return {
+    id: chat._id,
+    name: chat.chatName,
+    isGroup: chat.isGroupChat,
+    user_id: chat.users,
+    groupAdmin: chat.groupAdmin._id,
+    time: "9:37",
+    unread: 2,
+    pinned: false, // hoặc giữ nếu bạn có logic pinned
   };
 };

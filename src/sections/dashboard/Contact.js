@@ -208,10 +208,13 @@ const Contact = () => {
                     },
                     width: "120px",
                   }}
+                  onClick={() => {
+                    dispatch(UpdateSidebarType("MEMBERS"));
+                  }}
                 >
                   <Users size={20} />
                   <Typography variant="body2" fontWeight={500}>
-                    {(current_conversation?.user_id?.length || 0) + 1} members
+                    {current_conversation?.user_id?.length || 0} members
                   </Typography>
                 </Stack>
               </Stack>
