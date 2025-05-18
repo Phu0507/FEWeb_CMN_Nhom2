@@ -12,6 +12,8 @@ import {
   CircleDashed,
   MagnifyingGlass,
   Users,
+  UserPlus,
+  ChatsCircle,
 } from "phosphor-react";
 import { SimpleBarStyle } from "../../components/Scrollbar";
 import { useTheme } from "@mui/material/styles";
@@ -33,6 +35,7 @@ import {
   UpdateGroupAdmin,
   RemoveConversation,
 } from "../../redux/slices/conversation";
+import CreateGroup from "../../sections/dashboard/CreateGroup";
 
 const user_id = window.localStorage.getItem("user_id");
 
@@ -99,6 +102,24 @@ const Chats = () => {
     };
   }, [dispatch]);
 
+  useEffect(() => {
+    socket.on("group:deleted", ({ chatId }) => {
+      dispatch(RemoveConversation(chatId));
+    });
+
+    return () => {
+      socket.off("group:deleted");
+    };
+  }, [dispatch]);
+
+  // const current = useSelector(
+  //   (state) => state.conversation.direct_chat.current_conversation
+  // );
+
+  // useEffect(() => {
+  //   console.log("Current conversation sau khi xóa:", current);
+  // }, [current]);
+
   const [openDialog, setOpenDialog] = useState(false);
 
   const handleCloseDialog = () => {
@@ -106,6 +127,15 @@ const Chats = () => {
   };
   const handleOpenDialog = () => {
     setOpenDialog(true);
+  };
+
+  const [openDialogNewGroup, setOpenDialogNewGroup] = useState(false);
+
+  const handleCloseDialogNewGroup = () => {
+    setOpenDialogNewGroup(false);
+  };
+  const handleOpenDialogNewGroup = () => {
+    setOpenDialogNewGroup(true);
   };
 
   return (
@@ -145,8 +175,11 @@ const Chats = () => {
               >
                 <Users />
               </IconButton>
-              <IconButton sx={{ width: "max-content" }}>
-                <CircleDashed />
+              <IconButton
+                sx={{ width: "max-content" }}
+                onClick={handleOpenDialogNewGroup}
+              >
+                <UserPlus />
               </IconButton>
             </Stack>
           </Stack>
@@ -194,6 +227,12 @@ const Chats = () => {
       </Box>
       {openDialog && (
         <Friends open={openDialog} handleClose={handleCloseDialog} />
+      )}
+      {openDialogNewGroup && (
+        <CreateGroup
+          open={openDialogNewGroup}
+          handleClose={handleCloseDialogNewGroup}
+        />
       )}
     </>
   );

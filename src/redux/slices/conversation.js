@@ -549,6 +549,28 @@ export const removeGroupMember = (chatId, userId) => {
   };
 };
 
+export const removeGroup = (chatId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const response = await axios.delete(
+        `http://localhost:5000/api/chat/dissGroup/${chatId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      dispatch(ToggleFetchAgain());
+    } catch (error) {
+      console.error("Lỗi khi giải tán nhóm:", error);
+    }
+  };
+};
+
 const transformChatToConversation = (chat) => {
   return {
     id: chat._id,

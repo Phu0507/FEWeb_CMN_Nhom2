@@ -37,9 +37,12 @@ const TAGS_OPTION = [
 
 const CreateGroupForm = ({ handleClose }) => {
   const NewGroupSchema = Yup.object().shape({
-    title: Yup.string().required("Title is required"),
+    title: Yup.string()
+      .trim("Không được chứa khoảng trắng đầu hoặc cuối")
+      .strict(true)
+      .required("Tên nhóm không được để trống"),
 
-    members: Yup.array().min(2, "Must have at least 2 members"),
+    members: Yup.array().min(2, "Phải có ít nhất 2 thành viên"),
   });
 
   const defaultValues = {
@@ -51,6 +54,7 @@ const CreateGroupForm = ({ handleClose }) => {
   const methods = useForm({
     resolver: yupResolver(NewGroupSchema),
     defaultValues,
+    mode: "onBlur",
   });
 
   const {
@@ -89,7 +93,11 @@ const CreateGroupForm = ({ handleClose }) => {
           justifyContent={"end"}
         >
           <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting || !isValid}
+          >
             Create
           </Button>
         </Stack>

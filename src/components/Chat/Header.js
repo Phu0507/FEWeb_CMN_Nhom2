@@ -28,6 +28,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { StartAudioCall } from "../../redux/slices/audioCall";
 import { StartVideoCall } from "../../redux/slices/videoCall";
 import RenameGroup from "../../sections/dashboard/RenameGroup";
+import {
+  removeGroupMember,
+  removeGroup,
+} from "../../redux/slices/conversation";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -71,6 +75,12 @@ const Conversation_Menu = [
   {
     title: "Delete chat",
   },
+  {
+    title: "Remove Group",
+  },
+  {
+    title: "Leave Group",
+  },
 ];
 
 const ChatHeader = () => {
@@ -91,6 +101,53 @@ const ChatHeader = () => {
   const { current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
   );
+
+  const currentUserId = localStorage.getItem("user_id");
+
+  const filteredMenu = Conversation_Menu.filter((el) => {
+    if (el.title === "Delete chat") {
+      return !current_conversation?.isGroup;
+    }
+
+    if (el.title === "Remove Group") {
+      return (
+        current_conversation?.isGroup &&
+        current_conversation?.groupAdmin === currentUserId
+      );
+    }
+
+    if (el.title === "Leave Group") {
+      return (
+        current_conversation?.isGroup &&
+        current_conversation?.groupAdmin !== currentUserId
+      );
+    }
+
+    // Các mục còn lại hiển thị mặc định
+    return (
+      el.title !== "Remove Group" &&
+      el.title !== "Leave Group" &&
+      el.title !== "Delete chat"
+    );
+  });
+
+  const handleMenuItemClick = (title) => {
+    handleCloseConversationMenu();
+
+    if (title === "Contact info") {
+      setTimeout(() => {
+        dispatch(ToggleSidebar());
+        dispatch(UpdateSidebarType("CONTACT"));
+      }, 100);
+    } else if (title === "Leave Group") {
+      dispatch(removeGroupMember(current_conversation.id, currentUserId));
+      console.log("Rời nhóm thành công");
+    } else if (title === "Remove Group") {
+      dispatch(removeGroup(current_conversation.id));
+      console.log("Xoa nhom thanh cong");
+    }
+    // Có thể mở rộng thêm else if cho các title khác như "Delete chat", "Mute notifications", ...
+  };
 
   const [conversationMenuAnchorEl, setConversationMenuAnchorEl] =
     React.useState(null);
@@ -264,18 +321,10 @@ const ChatHeader = () => {
             >
               <Box p={1}>
                 <Stack spacing={1}>
-                  {Conversation_Menu.map((el) => (
+                  {filteredMenu.map((el) => (
                     <MenuItem
                       key={el.title}
-                      onClick={() => {
-                        handleCloseConversationMenu();
-                        if (el.title === "Contact info") {
-                          setTimeout(() => {
-                            dispatch(ToggleSidebar());
-                            dispatch(UpdateSidebarType("CONTACT"));
-                          }, 100);
-                        }
-                      }}
+                      onClick={() => handleMenuItemClick(el.title)}
                     >
                       <Stack
                         sx={{ minWidth: 100 }}
