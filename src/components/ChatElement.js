@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, Badge, Stack, Avatar, Typography } from "@mui/material";
+import {
+  Box,
+  Badge,
+  Stack,
+  Avatar,
+  Typography,
+  AvatarGroup,
+} from "@mui/material";
 import { styled, useTheme, alpha } from "@mui/material/styles";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,6 +15,7 @@ import {
   SetCurrentConversation,
   getCurrentMessagesFromServer,
 } from "../redux/slices/conversation";
+import GroupAvatar from "../contexts/GroupAvatar";
 
 const truncateText = (string, n) => {
   return string?.length > n ? `${string?.slice(0, n)}...` : string;
@@ -48,7 +56,7 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
   },
 }));
 
-const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
+const ChatElement = ({ img, name, msg, time, unread, online, id, isGroup }) => {
   const dispatch = useDispatch();
   const { room_id } = useSelector((state) => state.app);
   const selectedChatId = room_id?.toString();
@@ -100,16 +108,18 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
       >
         <Stack direction="row" spacing={2}>
           {" "}
-          {online ? (
+          {isGroup ? (
+            <GroupAvatar members={conversation.user_id} />
+          ) : online ? (
             <StyledBadge
               overlap="circular"
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               variant="dot"
             >
-              <Avatar alt={name} src={img} />
+              <Avatar alt={name} src={img} sx={{ width: 42, height: 42 }} />
             </StyledBadge>
           ) : (
-            <Avatar alt={name} src={img} />
+            <Avatar alt={name} src={img} sx={{ width: 42, height: 42 }} />
           )}
           <Stack spacing={0.3}>
             <Typography
