@@ -27,9 +27,6 @@ const slice = createSlice({
         const isGroup = el.isGroupChat;
 
         if (isGroup) {
-          // Nếu là nhóm, trả về thông tin nhóm
-          const usersData = el.users;
-          // console.log("usersData", usersData);
           return {
             id: el._id,
             user_id: el.users,
@@ -601,14 +598,39 @@ export const createGroup = (groupChatName, selectedUsers) => {
 
       const newGroup = response.data;
       socket.emit("group:new", newGroup);
-      const newG = transformChatToConversation(newGroup);
-      console.log("newG:", newG); // kiểm tra giá trị
-      dispatch(SelectConversation({ room_id: newG.id }));
-      dispatch(SetCurrentConversation({ conversation: newG }));
-      dispatch(ToggleFetchAgain());
+      const group = transformChatToConversation(newGroup);
+      dispatch(SelectConversation({ room_id: group.id }));
+      dispatch(SetCurrentConversation({ conversation: group }));
     } catch (error) {
       console.error("Lỗi khi tạo nhóm:", error);
       throw error; // nếu muốn handle ở component
+    }
+  };
+};
+
+export const addUsersToGroup = (chatId, selectedUsers) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const payload = {
+        chatId,
+        userId: selectedUsers.map((u) => u._id),
+      };
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const { data } = await axios.put("/api/chat/groupadd", payload, config);
+      socket.emit("group:updated", data);
+      dispatch(ToggleFetchAgain());
+    } catch (err) {
+      console.error("Lỗi khi thêm:", err);
+      throw err; // Nếu muốn component xử lý lỗi tiếp
     }
   };
 };

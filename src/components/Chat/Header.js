@@ -20,6 +20,7 @@ import {
   VideoCamera,
   User,
   PencilLine,
+  UserPlus,
 } from "phosphor-react";
 import { faker } from "@faker-js/faker";
 import useResponsive from "../../hooks/useResponsive";
@@ -32,6 +33,7 @@ import {
   removeGroupMember,
   removeGroup,
 } from "../../redux/slices/conversation";
+import AddUserGroup from "../../sections/dashboard/AddUserGroup";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -90,6 +92,7 @@ const ChatHeader = () => {
 
   const [hovered, setHovered] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDialogAddUser, setOpenDialogAddUser] = useState(false);
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -98,6 +101,12 @@ const ChatHeader = () => {
     setOpenDialog(true);
   };
 
+  const handleCloseDialogAddUser = () => {
+    setOpenDialogAddUser(false);
+  };
+  const handleOpenDialogAddUser = () => {
+    setOpenDialogAddUser(true);
+  };
   const { current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
   );
@@ -269,17 +278,21 @@ const ChatHeader = () => {
           >
             <IconButton
               onClick={() => {
+                if (current_conversation.isGroup) {
+                  handleOpenDialogAddUser();
+                } else {
+                  dispatch(StartAudioCall(current_conversation.user_id));
+                }
+              }}
+            >
+              {current_conversation.isGroup ? <UserPlus /> : <Phone />}
+            </IconButton>
+            <IconButton
+              onClick={() => {
                 dispatch(StartVideoCall(current_conversation.user_id));
               }}
             >
               <VideoCamera />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                dispatch(StartAudioCall(current_conversation.user_id));
-              }}
-            >
-              <Phone />
             </IconButton>
             {!isMobile && (
               <IconButton>
@@ -348,6 +361,13 @@ const ChatHeader = () => {
           handleClose={handleCloseDialog}
           groupName={current_conversation?.name}
           chatId={current_conversation?.id}
+        />
+      )}
+
+      {openDialogAddUser && (
+        <AddUserGroup
+          open={openDialogAddUser}
+          handleClose={handleCloseDialogAddUser}
         />
       )}
     </>

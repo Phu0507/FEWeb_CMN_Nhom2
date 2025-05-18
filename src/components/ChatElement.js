@@ -59,7 +59,7 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
 
   const conversation = conversations.find((conv) => conv.id === id);
 
-  let isSelected = +selectedChatId === id;
+  let isSelected = selectedChatId === id;
 
   if (!selectedChatId) {
     isSelected = false;
