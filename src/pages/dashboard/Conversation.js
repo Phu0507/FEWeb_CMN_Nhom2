@@ -46,7 +46,7 @@ const Conversation = ({ isMobile, menu }) => {
   const { conversations, current_messages, current_conversation, fetchAgain } =
     useSelector((state) => state.conversation.direct_chat);
   const { room_id } = useSelector((state) => state.app);
-
+  console.log("hientai", current_conversation);
   // useEffect(() => {
   //   const current = conversations.find((el) => el?.id === room_id);
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import {
   Button,
@@ -14,6 +14,9 @@ import { useForm } from "react-hook-form";
 import FormProvider from "../../components/hook-form/FormProvider";
 import { RHFTextField } from "../../components/hook-form";
 import RHFAutocomplete from "../../components/hook-form/RHFAutocomplete";
+import axios from "../../utils/axios";
+import { useDispatch, useSelector } from "react-redux";
+import { createGroup } from "../../redux/slices/conversation";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -36,6 +39,24 @@ const TAGS_OPTION = [
 ];
 
 const CreateGroupForm = ({ handleClose }) => {
+  const [options, setOptions] = useState([]);
+  const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const fetchMembers = async (keyword) => {
+    try {
+      const response = await axios.get(`/users?search=${keyword}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("data", response.data);
+      setOptions(response.data || []);
+    } catch (error) {
+      console.error("Lỗi fetch members:", error);
+      setOptions([]);
+    }
+  };
   const NewGroupSchema = Yup.object().shape({
     title: Yup.string()
       .trim("Không được chứa khoảng trắng đầu hoặc cuối")
@@ -48,7 +69,7 @@ const CreateGroupForm = ({ handleClose }) => {
   const defaultValues = {
     title: "",
 
-    tags: [],
+    members: [],
   };
 
   const methods = useForm({
@@ -65,13 +86,11 @@ const CreateGroupForm = ({ handleClose }) => {
     formState: { isSubmitting, isValid },
   } = methods;
 
-  const onSubmit = async (data) => {
-    try {
-      //  API Call
-      console.log("DATA", data);
-    } catch (error) {
-      console.error(error);
-    }
+  const onSubmit = (data) => {
+    dispatch(createGroup(data.title, data.members));
+    console.log(data.title, data.members);
+    handleClose();
+    reset();
   };
 
   return (
@@ -83,7 +102,16 @@ const CreateGroupForm = ({ handleClose }) => {
           label="Members"
           multiple
           freeSolo
-          options={TAGS_OPTION.map((option) => option)}
+          options={options}
+          onInputChange={(event, value, reason) => {
+            if (reason === "input") {
+              if (value.trim() === "") {
+                setOptions([]); // Xóa kết quả gợi ý khi input rỗng
+              } else {
+                fetchMembers(value);
+              }
+            }
+          }}
           ChipProps={{ size: "medium" }}
         />
         <Stack

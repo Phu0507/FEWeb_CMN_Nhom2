@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { faker } from "@faker-js/faker";
 import axios from "../../utils/axios";
 import { socket } from "../../socket";
+import { SelectConversation } from "./app";
 
 // const user_id = localStorage.getItem("user_id");
 // console.log("id", user_id);
@@ -213,6 +214,10 @@ const slice = createSlice({
         state.direct_chat.current_conversation = null;
       }
     },
+    addNewGroupChat(state, action) {
+      const newGroup = transformChatToConversation(action.payload.newGroup);
+      state.direct_chat.conversations.unshift(newGroup);
+    },
   },
 });
 
@@ -288,6 +293,12 @@ export const UpdateGroupAdmin = (chatId, newAdminId) => {
 export const RemoveConversation = (chatId) => {
   return (dispatch) => {
     dispatch(slice.actions.removeConversation({ chatId }));
+  };
+};
+
+export const AddNewGroupChat = (newGroup) => {
+  return (dispatch) => {
+    dispatch(slice.actions.addNewGroupChat({ newGroup }));
   };
 };
 
@@ -567,6 +578,37 @@ export const removeGroup = (chatId) => {
       dispatch(ToggleFetchAgain());
     } catch (error) {
       console.error("Lỗi khi giải tán nhóm:", error);
+    }
+  };
+};
+
+export const createGroup = (groupChatName, selectedUsers) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const payload = {
+        name: groupChatName,
+        users: JSON.stringify(selectedUsers.map((u) => u._id)),
+      };
+
+      const response = await axios.post("/api/chat/group", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const newGroup = response.data;
+      socket.emit("group:new", newGroup);
+      const newG = transformChatToConversation(newGroup);
+      console.log("newG:", newG); // kiểm tra giá trị
+      dispatch(SelectConversation({ room_id: newG.id }));
+      dispatch(SetCurrentConversation({ conversation: newG }));
+      dispatch(ToggleFetchAgain());
+    } catch (error) {
+      console.error("Lỗi khi tạo nhóm:", error);
+      throw error; // nếu muốn handle ở component
     }
   };
 };

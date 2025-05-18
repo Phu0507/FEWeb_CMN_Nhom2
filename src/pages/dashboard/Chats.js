@@ -34,6 +34,7 @@ import {
   GroupChatUpdated,
   UpdateGroupAdmin,
   RemoveConversation,
+  AddNewGroupChat,
 } from "../../redux/slices/conversation";
 import CreateGroup from "../../sections/dashboard/CreateGroup";
 
@@ -73,8 +74,12 @@ const Chats = () => {
       dispatch(UpdateGroupAdmin(chatId, newAdminId));
     };
     socket.on("admin:transferred", handleAdmin);
+    socket.on("group:new", (newGroup) => {
+      dispatch(AddNewGroupChat(newGroup));
+    });
     return () => {
       socket.off("admin:transferred");
+      socket.off("group:new");
     };
   }, [dispatch]);
 
