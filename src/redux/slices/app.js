@@ -257,6 +257,43 @@ export const FetchUserProfile = () => {
       });
   };
 };
+
+export const ChangePasswordAPI = (newPassword, oldPassword) => {
+  return async (dispatch, getState) => {
+    try {
+      const token = getState().auth.token;
+
+      const response = await axios.put(
+        "/users/update-password",
+        { oldPassword, newPassword },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      dispatch(
+        showSnackbar({
+          severity: "success",
+          message: "Đổi mật khẩu thành công",
+        })
+      );
+      return true;
+    } catch (error) {
+      dispatch(
+        showSnackbar({
+          severity: "error",
+          message:
+            error.response?.data?.message || "Mật khẩu cũ không chính xác",
+        })
+      );
+      return false;
+    }
+  };
+};
+
 export const UpdateUserProfile = (formValues) => {
   return async (dispatch, getState) => {
     const file = formValues.avatar;

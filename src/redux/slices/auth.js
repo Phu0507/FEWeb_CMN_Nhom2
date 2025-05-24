@@ -121,47 +121,52 @@ export function ForgotPassword(formValues) {
 
 export function LoginUser(formValues) {
   return async (dispatch, getState) => {
-    // Make API call here
-
     dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
 
-    await axios
-      .post(
+    try {
+      const response = await axios.post(
         "/users/signin",
-        {
-          ...formValues,
-        },
+        { ...formValues },
         {
           headers: {
             "Content-Type": "application/json",
           },
         }
-      )
-      .then(function (response) {
-        dispatch(
-          slice.actions.logIn({
-            isLoggedIn: true,
-            token: response.data.token,
-            user_id: response.data._id,
-          })
-        );
-        localStorage.setItem("user_id", response.data._id);
-        // const storedUserId = localStorage.getItem("user_id");
-        // console.log("data", storedUserId);
-        dispatch(
-          showSnackbar({ severity: "success", message: response.data.message })
-        );
-        dispatch(
-          slice.actions.updateIsLoading({ isLoading: false, error: false })
-        );
-      })
-      .catch(function (error) {
-        console.log(error);
-        dispatch(showSnackbar({ severity: "error", message: error.message }));
-        dispatch(
-          slice.actions.updateIsLoading({ isLoading: false, error: true })
-        );
-      });
+      );
+
+      dispatch(
+        slice.actions.logIn({
+          isLoggedIn: true,
+          token: response.data.token,
+          user_id: response.data._id,
+        })
+      );
+
+      localStorage.setItem("user_id", response.data._id);
+
+      dispatch(
+        showSnackbar({
+          severity: "success",
+          message: "Đăng nhập thành công",
+        })
+      );
+
+      dispatch(
+        slice.actions.updateIsLoading({ isLoading: false, error: false })
+      );
+    } catch (err) {
+      console.log("hii", err.error);
+      dispatch(
+        showSnackbar({
+          severity: "error",
+          message: err.error || "Đăng nhập thất bại",
+        })
+      );
+
+      dispatch(
+        slice.actions.updateIsLoading({ isLoading: false, error: true })
+      );
+    }
   };
 }
 

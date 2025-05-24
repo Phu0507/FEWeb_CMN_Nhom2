@@ -7,12 +7,17 @@ import {
   SignOut,
   User,
   Users,
+  LockKey,
 } from "phosphor-react";
 
 const Profile_Menu = [
   {
     title: "Profile",
     icon: <User />,
+  },
+  {
+    title: "Change Password",
+    icon: <LockKey />,
   },
   {
     title: "Settings",

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, Box, Fade, Menu, MenuItem, Stack } from "@mui/material";
 
 import { faker } from "@faker-js/faker";
@@ -9,9 +9,10 @@ import { LogoutUser } from "../../redux/slices/auth";
 import { socket } from "../../socket";
 import { useNavigate } from "react-router-dom";
 import { AWS_S3_REGION, S3_BUCKET_NAME } from "../../config";
+import ChangePassword from "../../sections/dashboard/ChangePassword";
 
 const ProfileMenu = () => {
-  const {user} = useSelector((state) => state.app);
+  const { user } = useSelector((state) => state.app);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -28,6 +29,14 @@ const ProfileMenu = () => {
   const user_name = user?.firstName;
   const user_img = `https://${S3_BUCKET_NAME}.s3.${AWS_S3_REGION}.amazonaws.com/${user?.avatar}`;
 
+  const [openDialog, setOpenDialog] = useState(false);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
   return (
     <>
       <Avatar
@@ -38,6 +47,7 @@ const ProfileMenu = () => {
         alt={user_name}
         src={user_img}
         onClick={handleClick}
+        sx={{ cursor: "pointer" }}
       />
       <Menu
         MenuListProps={{
@@ -64,18 +74,18 @@ const ProfileMenu = () => {
               <MenuItem onClick={handleClose}>
                 <Stack
                   onClick={() => {
-                    if(idx === 0) {
+                    if (idx === 0) {
                       navigate("/profile");
-                    }
-                    else if(idx === 1) {
+                    } else if (idx === 1) {
+                      handleOpenDialog();
+                    } else if (idx === 2) {
                       navigate("/settings");
-                    }
-                    else {
+                    } else {
                       dispatch(LogoutUser());
-                      socket.emit("end", {user_id});
+                      socket.emit("end", { user_id });
                     }
                   }}
-                  sx={{ width: 100 }}
+                  sx={{ width: 150 }}
                   direction="row"
                   alignItems={"center"}
                   justifyContent="space-between"
@@ -88,6 +98,9 @@ const ProfileMenu = () => {
           </Stack>
         </Box>
       </Menu>
+      {openDialog && (
+        <ChangePassword open={openDialog} handleClose={handleCloseDialog} />
+      )}
     </>
   );
 };
