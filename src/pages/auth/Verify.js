@@ -5,11 +5,22 @@ import AuthSocial from "../../sections/auth/AuthSocial";
 import Login from "../../sections/auth/LoginForm";
 import VerifyForm from "../../sections/auth/VerifyForm";
 import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ----------------------------------------------------------------------
 
 export default function LoginPage() {
   const { email, otpType } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Nếu otpType rỗng, không cho vào trang này
+    if (!otpType) {
+      navigate("/auth/login");
+    }
+  }, [otpType, navigate]);
+
   const getHeading = () => {
     switch (otpType) {
       case "register":

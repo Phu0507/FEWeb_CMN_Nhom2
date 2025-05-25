@@ -13,6 +13,7 @@ const initialState = {
   user_id: null,
   email: "",
   otpType: "",
+  otpValue: "",
   error: false,
 };
 
@@ -37,6 +38,7 @@ const slice = createSlice({
     updateRegisterEmail(state, action) {
       state.email = action.payload.email;
       state.otpType = action.payload.otpType;
+      state.otpValue = action.payload.otpValue;
     },
   },
 });
@@ -44,13 +46,13 @@ const slice = createSlice({
 // Reducer
 export default slice.reducer;
 
-export function NewPassword(formValues) {
+export function NewPassword(formValues, navigate) {
   return async (dispatch, getState) => {
     dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
 
     await axios
       .post(
-        "/auth/reset-password",
+        "users/reset-password-forgot",
         {
           ...formValues,
         },
@@ -63,9 +65,10 @@ export function NewPassword(formValues) {
       .then(function (response) {
         console.log(response);
         dispatch(
-          slice.actions.logIn({
-            isLoggedIn: true,
-            token: response.data.token,
+          slice.actions.updateRegisterEmail({
+            email: "",
+            otpType: "",
+            otpValue: "",
           })
         );
         dispatch(
@@ -77,10 +80,20 @@ export function NewPassword(formValues) {
       })
       .catch(function (error) {
         console.log(error);
-        dispatch(showSnackbar({ severity: "error", message: error.message }));
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: error.message || "OTP đã hết hạn",
+          })
+        );
         dispatch(
           slice.actions.updateIsLoading({ isLoading: false, error: true })
         );
+      })
+      .finally(() => {
+        if (!getState().auth.error) {
+          navigate("/auth/login");
+        }
       });
   };
 }
@@ -154,7 +167,13 @@ export function VerifyEmailForgotPassword(formValues, navigate) {
       )
       .then(function (response) {
         console.log(response);
-        dispatch(slice.actions.updateRegisterEmail({ email: "", otpType: "" }));
+        dispatch(
+          slice.actions.updateRegisterEmail({
+            email: formValues.email,
+            otpType: "forgot",
+            otpValue: formValues.otp,
+          })
+        );
         dispatch(
           showSnackbar({ severity: "success", message: response.data.message })
         );
@@ -164,7 +183,12 @@ export function VerifyEmailForgotPassword(formValues, navigate) {
       })
       .catch(function (error) {
         console.log(error);
-        dispatch(showSnackbar({ severity: "error", message: error.message }));
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: error.message || "OTP không hợp lệ",
+          })
+        );
         dispatch(
           slice.actions.updateIsLoading({ error: true, isLoading: false })
         );

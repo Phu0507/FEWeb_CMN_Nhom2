@@ -15,11 +15,13 @@ import {
   VerifyEmailForgotPassword,
 } from "../../redux/slices/auth";
 import { LoadingButton } from "@mui/lab";
+import { useNavigate } from "react-router-dom";
 
 // ----------------------------------------------------------------------
 
 export default function VerifyForm() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { email, otpType } = useSelector((state) => state.auth);
   const VerifyCodeSchema = Yup.object().shape({
     code1: Yup.string().required("Code is required"),
@@ -58,7 +60,7 @@ export default function VerifyForm() {
       } else if (otpType === "login") {
         // dispatch(LoginWithOTP({ email, otp }));
       } else if (otpType === "forgot") {
-        dispatch(VerifyForgotPasswordOTP({ email, otp }));
+        dispatch(VerifyEmailForgotPassword({ email, otp }, navigate));
       }
     } catch (error) {
       console.error(error);
