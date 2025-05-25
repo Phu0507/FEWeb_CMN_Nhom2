@@ -11,6 +11,7 @@ import { Eye, EyeSlash } from "phosphor-react";
 import RHFCodes from "../../components/hook-form/RHFCodes";
 import { useDispatch, useSelector } from "react-redux";
 import { VerifyEmail } from "../../redux/slices/auth";
+import { LoadingButton } from "@mui/lab";
 
 // ----------------------------------------------------------------------
 
@@ -43,7 +44,7 @@ export default function VerifyForm() {
 
   const {
     handleSubmit,
-    formState: { isSubmitting, errors },
+    formState: { isSubmitting, isValid, errors },
   } = methods;
 
   const onSubmit = async (data) => {
@@ -67,12 +68,13 @@ export default function VerifyForm() {
           keyName="code"
           inputs={["code1", "code2", "code3", "code4", "code5", "code6"]}
         />
-
-        <Button
+        <LoadingButton
           fullWidth
           size="large"
           type="submit"
           variant="contained"
+          loading={isSubmitting}
+          disabled={!isValid}
           sx={{
             mt: 3,
             bgcolor: "text.primary",
@@ -86,7 +88,7 @@ export default function VerifyForm() {
           }}
         >
           Verify
-        </Button>
+        </LoadingButton>
       </Stack>
     </FormProvider>
   );

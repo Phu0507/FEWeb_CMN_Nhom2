@@ -4,7 +4,11 @@ import { Navigate, Outlet } from "react-router-dom";
 import useResponsive from "../../hooks/useResponsive";
 import SideNav from "./SideNav";
 import { useDispatch, useSelector } from "react-redux";
-import { FetchUserProfile, SelectConversation, showSnackbar } from "../../redux/slices/app";
+import {
+  FetchUserProfile,
+  SelectConversation,
+  showSnackbar,
+} from "../../redux/slices/app";
 import { socket, connectSocket } from "../../socket";
 import {
   UpdateDirectConversation,
@@ -19,12 +23,15 @@ import {
 } from "../../redux/slices/audioCall";
 import AudioCallDialog from "../../sections/dashboard/Audio/CallDialog";
 import VideoCallDialog from "../../sections/dashboard/video/CallDialog";
-import { PushToVideoCallQueue, UpdateVideoCallDialog } from "../../redux/slices/videoCall";
+import {
+  PushToVideoCallQueue,
+  UpdateVideoCallDialog,
+} from "../../redux/slices/videoCall";
 
 const DashboardLayout = () => {
   const isDesktop = useResponsive("up", "md");
   const dispatch = useDispatch();
-  const {user_id} = useSelector((state) => state.auth);
+  const { user_id } = useSelector((state) => state.auth);
   const { open_audio_notification_dialog, open_audio_dialog } = useSelector(
     (state) => state.audioCall
   );
@@ -39,7 +46,6 @@ const DashboardLayout = () => {
   useEffect(() => {
     dispatch(FetchUserProfile());
   }, []);
-  
 
   const handleCloseAudioDialog = () => {
     dispatch(UpdateAudioCallDialog({ state: false }));
@@ -50,14 +56,14 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      window.onload = function () {
-        if (!window.location.hash) {
-          window.location = window.location + "#loaded";
-          window.location.reload();
-        }
-      };
+      // window.onload = function () {
+      //   if (!window.location.hash) {
+      //     window.location = window.location + "#loaded";
+      //     window.location.reload();
+      //   }
+      // };
 
-      window.onload();
+      // window.onload();
 
       if (!socket) {
         connectSocket(user_id);
@@ -67,7 +73,7 @@ const DashboardLayout = () => {
         // TODO => dispatch an action to add this in call_queue
         dispatch(PushToAudioCallQueue(data));
       });
-      
+
       socket.on("video_call_notification", (data) => {
         // TODO => dispatch an action to add this in call_queue
         dispatch(PushToVideoCallQueue(data));

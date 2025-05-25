@@ -89,7 +89,7 @@ export function ForgotPassword(formValues) {
 
     await axios
       .post(
-        "/auth/forgot-password",
+        "/users/send-otp",
         {
           ...formValues,
         },
@@ -111,7 +111,12 @@ export function ForgotPassword(formValues) {
       })
       .catch(function (error) {
         console.log(error);
-        dispatch(showSnackbar({ severity: "error", message: error.message }));
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: error.message || "Email không tồn tại",
+          })
+        );
         dispatch(
           slice.actions.updateIsLoading({ isLoading: false, error: true })
         );
@@ -183,7 +188,7 @@ export function RegisterUser(formValues) {
 
     await axios
       .post(
-        "/auth/register",
+        "/users/signup",
         {
           ...formValues,
         },
@@ -208,7 +213,7 @@ export function RegisterUser(formValues) {
       })
       .catch(function (error) {
         console.log(error);
-        dispatch(showSnackbar({ severity: "error", message: error.message }));
+        dispatch(showSnackbar({ severity: "error", message: error.error }));
         dispatch(
           slice.actions.updateIsLoading({ error: true, isLoading: false })
         );

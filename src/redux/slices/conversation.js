@@ -3,6 +3,7 @@ import { faker } from "@faker-js/faker";
 import axios from "../../utils/axios";
 import { socket } from "../../socket";
 import { SelectConversation } from "./app";
+import { showSnackbar } from "./app";
 
 // const user_id = localStorage.getItem("user_id");
 // console.log("id", user_id);
@@ -497,7 +498,12 @@ export const renameGroup = (newName, chatId) => {
       dispatch(ToggleFetchAgain());
       socket.emit("group:updated", response.data);
     } catch (error) {
-      console.error("Chỉ trưởng nhóm mới đổi tên:", error);
+      dispatch(
+        showSnackbar({
+          severity: "error",
+          message: "Trưởng nhóm mới có quyền đổi tên",
+        })
+      );
     }
   };
 };

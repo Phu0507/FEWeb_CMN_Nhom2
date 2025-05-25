@@ -2,12 +2,15 @@ import { useState } from "react";
 import * as Yup from "yup";
 // form
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { yupResolver } from "@hookform/resolvers/yup/dist/yup.js";
 // @mui
 import { Link, Stack, Alert, IconButton, InputAdornment } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 // components
-import FormProvider, { RHFTextField } from "../../components/hook-form";
+import FormProvider, {
+  RHFTextField,
+  RHFRadioGroup,
+} from "../../components/hook-form";
 import { Eye, EyeSlash } from "phosphor-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RegisterUser } from "../../redux/slices/auth";
@@ -16,28 +19,58 @@ import { RegisterUser } from "../../redux/slices/auth";
 
 export default function AuthRegisterForm() {
   const dispatch = useDispatch();
-  const {isLoading} = useSelector((state) => state.auth);
+  const { isLoading } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
 
   const LoginSchema = Yup.object().shape({
-    firstName: Yup.string().required("First name required"),
-    lastName: Yup.string().required("Last name required"),
+    fullName: Yup.string()
+      .required("Vui lòng nhập họ tên")
+      .min(3, "Họ tên phải có ít nhất 3 ký tự")
+      .matches(/^[A-Za-zÀ-ỹ0-9\s]+$/, "Họ tên không được chứa ký tự đặc biệt")
+      .matches(
+        /^\S.*\S$|^\S{1,2}$/,
+        "Họ tên không được bắt đầu hoặc kết thúc bằng dấu cách"
+      ),
+
+    dateOfBirth: Yup.date()
+      .required("Vui lòng chọn ngày sinh")
+      .typeError("Ngày sinh không hợp lệ")
+      .max(
+        new Date(Date.now() - 86400000),
+        "Ngày sinh phải trước ngày hiện tại"
+      ),
+
+    gender: Yup.string()
+      .oneOf(["male", "female"], "Vui lòng chọn giới tính")
+      .required("Vui lòng chọn giới tính"),
+
     email: Yup.string()
-      .required("Email is required")
-      .email("Email must be a valid email address"),
-    password: Yup.string().required("Password is required"),
+      .required("Vui lòng nhập địa chỉ email")
+      .email("Email không hợp lệ"),
+
+    password: Yup.string()
+      .required("Vui lòng nhập mật khẩu")
+      .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+      .matches(/^\S*$/, "Mật khẩu không được chứa dấu cách"),
+
+    confirmPassword: Yup.string()
+      .required("Vui lòng xác nhận mật khẩu")
+      .oneOf([Yup.ref("password")], "Mật khẩu xác nhận không khớp"),
   });
 
   const defaultValues = {
-    firstName: "",
-    lastName: "",
-    email: "demo@tawk.com",
-    password: "demo1234",
+    fullName: "",
+    dateOfBirth: "",
+    gender: "male", // or "male"/"female" as default
+    email: "",
+    password: "",
+    confirmPassword: "",
   };
 
   const methods = useForm({
     resolver: yupResolver(LoginSchema),
     defaultValues,
+    mode: "onBlur",
   });
 
   const {
@@ -67,10 +100,27 @@ export default function AuthRegisterForm() {
         {!!errors.afterSubmit && (
           <Alert severity="error">{errors.afterSubmit.message}</Alert>
         )}
-
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <RHFTextField name="firstName" label="First name" />
-          <RHFTextField name="lastName" label="Last name" />
+        <RHFTextField name="fullName" label="Full name" />
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+        >
+          <RHFTextField
+            name="dateOfBirth"
+            label="Date of Birth"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: { xs: "100%", sm: "300px" } }}
+          />
+          <RHFRadioGroup
+            name="gender"
+            label="Gender"
+            options={[
+              { label: "Male", value: "male" },
+              { label: "Female", value: "female" },
+            ]}
+          />
         </Stack>
 
         <RHFTextField name="email" label="Email address" />
@@ -78,6 +128,23 @@ export default function AuthRegisterForm() {
         <RHFTextField
           name="password"
           label="Password"
+          type={showPassword ? "text" : "password"}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <Eye /> : <EyeSlash />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <RHFTextField
+          name="confirmPassword"
+          label="Confirm Password"
           type={showPassword ? "text" : "password"}
           InputProps={{
             endAdornment: (
