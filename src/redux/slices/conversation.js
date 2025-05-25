@@ -23,7 +23,7 @@ const slice = createSlice({
   reducers: {
     fetchDirectConversations(state, action) {
       const user_id = localStorage.getItem("user_id");
-      console.log("id2", user_id);
+      // console.log("id2", user_id);
       const list = action.payload.conversations.map((el) => {
         const isGroup = el.isGroupChat;
 
@@ -107,7 +107,6 @@ const slice = createSlice({
     },
     fetchCurrentMessages(state, action) {
       const messages = action.payload.messages;
-      console.log(messages);
       state.direct_chat.current_messages = messages;
       // const formatted_messages = messages.map((el) => ({
       //   id: el._id,
@@ -156,11 +155,11 @@ const slice = createSlice({
       const updatedChat = transformChatToConversation(
         action.payload.updatedChat
       );
-      console.log("update", updatedChat);
-      console.log(
-        "update2",
-        JSON.parse(JSON.stringify(state.direct_chat.conversations))
-      );
+      // console.log("update", updatedChat);
+      // console.log(
+      //   "update2",
+      //   JSON.parse(JSON.stringify(state.direct_chat.conversations))
+      // );
 
       const alreadyExists = state.direct_chat.conversations.some(
         (chat) => chat.id === updatedChat.id
@@ -198,7 +197,7 @@ const slice = createSlice({
     },
     removeConversation: (state, action) => {
       const chatId = action.payload.chatId;
-      console.log("hiiii", chatId);
+      // console.log("hiiii", chatId);
       // Xoá cuộc trò chuyện ra khỏi danh sách
       state.direct_chat.conversations = state.direct_chat.conversations.filter(
         (chat) => chat.id !== chatId
@@ -466,7 +465,7 @@ export const editMessage = (messageId, newContent) => {
         { content: newContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Response from API:", response);
+      // console.log("Response from API:", response);
 
       if (response.status === 200) {
         dispatch(slice.actions.editDirectMessage({ messageId, newContent }));

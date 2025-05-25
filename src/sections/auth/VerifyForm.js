@@ -10,14 +10,17 @@ import FormProvider, { RHFTextField } from "../../components/hook-form";
 import { Eye, EyeSlash } from "phosphor-react";
 import RHFCodes from "../../components/hook-form/RHFCodes";
 import { useDispatch, useSelector } from "react-redux";
-import { VerifyEmail } from "../../redux/slices/auth";
+import {
+  VerifyEmail,
+  VerifyEmailForgotPassword,
+} from "../../redux/slices/auth";
 import { LoadingButton } from "@mui/lab";
 
 // ----------------------------------------------------------------------
 
 export default function VerifyForm() {
   const dispatch = useDispatch();
-  const { email } = useSelector((state) => state.auth);
+  const { email, otpType } = useSelector((state) => state.auth);
   const VerifyCodeSchema = Yup.object().shape({
     code1: Yup.string().required("Code is required"),
     code2: Yup.string().required("Code is required"),
@@ -48,14 +51,15 @@ export default function VerifyForm() {
   } = methods;
 
   const onSubmit = async (data) => {
+    const otp = `${data.code1}${data.code2}${data.code3}${data.code4}${data.code5}${data.code6}`;
     try {
-      //   Send API Request
-      dispatch(
-        VerifyEmail({
-          email,
-          otp: `${data.code1}${data.code2}${data.code3}${data.code4}${data.code5}${data.code6}`,
-        })
-      );
+      if (otpType === "register") {
+        dispatch(VerifyEmail({ email, otp }));
+      } else if (otpType === "login") {
+        // dispatch(LoginWithOTP({ email, otp }));
+      } else if (otpType === "forgot") {
+        dispatch(VerifyForgotPasswordOTP({ email, otp }));
+      }
     } catch (error) {
       console.error(error);
     }

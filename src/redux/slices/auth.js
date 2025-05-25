@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-
+import { useNavigate } from "react-router-dom";
 import axios from "../../utils/axios";
 import { showSnackbar } from "./app";
 
@@ -12,6 +12,7 @@ const initialState = {
   user: null,
   user_id: null,
   email: "",
+  otpType: "",
   error: false,
 };
 
@@ -35,6 +36,7 @@ const slice = createSlice({
     },
     updateRegisterEmail(state, action) {
       state.email = action.payload.email;
+      state.otpType = action.payload.otpType;
     },
   },
 });
@@ -83,7 +85,7 @@ export function NewPassword(formValues) {
   };
 }
 
-export function ForgotPassword(formValues) {
+export function ForgotPassword(formValues, navigate) {
   return async (dispatch, getState) => {
     dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
 
@@ -101,7 +103,12 @@ export function ForgotPassword(formValues) {
       )
       .then(function (response) {
         console.log(response);
-
+        dispatch(
+          slice.actions.updateRegisterEmail({
+            email: formValues.email,
+            otpType: "forgot",
+          })
+        );
         dispatch(
           showSnackbar({ severity: "success", message: response.data.message })
         );
@@ -120,58 +127,148 @@ export function ForgotPassword(formValues) {
         dispatch(
           slice.actions.updateIsLoading({ isLoading: false, error: true })
         );
+      })
+      .finally(() => {
+        if (!getState().auth.error) {
+          navigate("/auth/verify");
+        }
       });
   };
 }
 
-export function LoginUser(formValues) {
+export function VerifyEmailForgotPassword(formValues, navigate) {
   return async (dispatch, getState) => {
     dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
 
-    try {
-      const response = await axios.post(
-        "/users/signin",
-        { ...formValues },
+    await axios
+      .post(
+        "/users/verify-otp",
+        {
+          ...formValues,
+        },
         {
           headers: {
             "Content-Type": "application/json",
           },
         }
-      );
+      )
+      .then(function (response) {
+        console.log(response);
+        dispatch(slice.actions.updateRegisterEmail({ email: "", otpType: "" }));
+        dispatch(
+          showSnackbar({ severity: "success", message: response.data.message })
+        );
+        dispatch(
+          slice.actions.updateIsLoading({ isLoading: false, error: false })
+        );
+      })
+      .catch(function (error) {
+        console.log(error);
+        dispatch(showSnackbar({ severity: "error", message: error.message }));
+        dispatch(
+          slice.actions.updateIsLoading({ error: true, isLoading: false })
+        );
+      })
+      .finally(() => {
+        if (!getState().auth.error) {
+          navigate("/auth/new-password");
+        }
+      });
+  };
+}
 
-      dispatch(
-        slice.actions.logIn({
-          isLoggedIn: true,
-          token: response.data.token,
-          user_id: response.data._id,
-        })
-      );
+// export function LoginUser(formValues) {
+//   return async (dispatch, getState) => {
+//     dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
 
-      localStorage.setItem("user_id", response.data._id);
+//     try {
+//       const response = await axios.post(
+//         "/users/signin",
+//         { ...formValues },
+//         {
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
 
-      dispatch(
-        showSnackbar({
-          severity: "success",
-          message: "Đăng nhập thành công",
-        })
-      );
+//       dispatch(
+//         slice.actions.logIn({
+//           isLoggedIn: true,
+//           token: response.data.token,
+//           user_id: response.data._id,
+//         })
+//       );
 
-      dispatch(
-        slice.actions.updateIsLoading({ isLoading: false, error: false })
-      );
-    } catch (err) {
-      console.log("hii", err.error);
-      dispatch(
-        showSnackbar({
-          severity: "error",
-          message: err.error || "Đăng nhập thất bại",
-        })
-      );
+//       localStorage.setItem("user_id", response.data._id);
 
-      dispatch(
-        slice.actions.updateIsLoading({ isLoading: false, error: true })
-      );
-    }
+//       dispatch(
+//         showSnackbar({
+//           severity: "success",
+//           message: "Đăng nhập thành công",
+//         })
+//       );
+
+//       dispatch(
+//         slice.actions.updateIsLoading({ isLoading: false, error: false })
+//       );
+//     } catch (err) {
+//       console.log("hii", err.error);
+//       dispatch(
+//         showSnackbar({
+//           severity: "error",
+//           message: err.error || "Đăng nhập thất bại",
+//         })
+//       );
+
+//       dispatch(
+//         slice.actions.updateIsLoading({ isLoading: false, error: true })
+//       );
+//     }
+//   };
+// }
+export function LoginUser(formValues) {
+  return async (dispatch, getState) => {
+    // Make API call here
+
+    dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
+
+    await axios
+      .post(
+        "/users/signin",
+        {
+          ...formValues,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then(function (response) {
+        console.log(response);
+        dispatch(
+          slice.actions.logIn({
+            isLoggedIn: true,
+            token: response.data.user.token,
+            user_id: response.data.user._id,
+          })
+        );
+        window.localStorage.setItem("user_id", response.data.user._id);
+        dispatch(
+          showSnackbar({ severity: "success", message: "Đăng nhập thành công" })
+        );
+        dispatch(
+          slice.actions.updateIsLoading({ isLoading: false, error: false })
+        );
+      })
+      .catch(function (error) {
+        console.log(error);
+        dispatch(showSnackbar({ severity: "error", message: error.error }));
+        dispatch(
+          slice.actions.updateIsLoading({ isLoading: false, error: true })
+        );
+      });
   };
 }
 
@@ -201,7 +298,10 @@ export function RegisterUser(formValues) {
       .then(function (response) {
         console.log(response);
         dispatch(
-          slice.actions.updateRegisterEmail({ email: formValues.email })
+          slice.actions.updateRegisterEmail({
+            email: formValues.email,
+            otpType: "register",
+          })
         );
 
         dispatch(
@@ -232,7 +332,7 @@ export function VerifyEmail(formValues) {
 
     await axios
       .post(
-        "/auth/verify",
+        "/users/verify-register-otp",
         {
           ...formValues,
         },
@@ -244,12 +344,13 @@ export function VerifyEmail(formValues) {
       )
       .then(function (response) {
         console.log(response);
-        dispatch(slice.actions.updateRegisterEmail({ email: "" }));
-        window.localStorage.setItem("user_id", response.data.user_id);
+        dispatch(slice.actions.updateRegisterEmail({ email: "", otpType: "" }));
+        window.localStorage.setItem("user_id", response.data.user._id);
         dispatch(
           slice.actions.logIn({
             isLoggedIn: true,
-            token: response.data.token,
+            token: response.data.user.token,
+            user_id: response.data.user._id,
           })
         );
 
