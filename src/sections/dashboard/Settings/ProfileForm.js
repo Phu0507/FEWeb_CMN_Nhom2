@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import * as Yup from "yup";
 // form
 import { useForm } from "react-hook-form";
@@ -46,6 +46,21 @@ const ProfileForm = ({ showRightPane, setShowRightPane }) => {
   } = methods;
 
   const values = watch();
+  useEffect(() => {
+    if (user) {
+      reset({
+        fullName: user.fullName || "",
+        avatar: user.avatar || "",
+        email: myEmail || "",
+        gender: user.gender || "",
+        dateOfBirth: user.dateOfBirth
+          ? new Date(user.dateOfBirth).toLocaleDateString("vi-VN")
+          : "",
+        phoneNumber: user.phoneNumber || "Chưa cập nhật",
+      });
+      setInitialAvatar(user.avatar);
+    }
+  }, [user, myEmail, reset]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -145,15 +160,15 @@ const ProfileForm = ({ showRightPane, setShowRightPane }) => {
             </LoadingButton>
           </Stack>
         )}
-        {!file && (
+        {!file && !showRightPane && (
           <Stack direction={"row"} justifyContent="end" spacing={2}>
             <LoadingButton
-              color={showRightPane ? "error" : "secondary"}
+              color={"secondary"}
               size="large"
               variant="contained"
-              onClick={() => setShowRightPane(!showRightPane)}
+              onClick={() => setShowRightPane(true)}
             >
-              {showRightPane ? "Cancel" : "Update"}
+              Update
             </LoadingButton>
           </Stack>
         )}
