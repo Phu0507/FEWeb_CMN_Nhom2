@@ -148,7 +148,9 @@ const ChangePasswordForm = ({ handleClose }) => {
           alignItems="center"
           justifyContent={"end"}
         >
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose} color="inherit">
+            Cancel
+          </Button>
           <LoadingButton
             type="submit"
             variant="contained"

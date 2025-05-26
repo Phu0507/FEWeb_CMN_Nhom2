@@ -28,10 +28,10 @@ const ConfirmDialog = ({ open, title, content, onConfirm, onClose }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">
-          Hủy
+          Cancel
         </Button>
         <Button onClick={onConfirm} color="primary" variant="contained">
-          Xác nhận
+          Confirm
         </Button>
       </DialogActions>
     </Dialog>

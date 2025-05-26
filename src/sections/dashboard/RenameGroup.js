@@ -71,7 +71,9 @@ const RenameGroupForm = ({ handleClose, groupName, onRename, chatId }) => {
           alignItems="center"
           justifyContent={"end"}
         >
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose} color="inherit">
+            Cancel
+          </Button>
           <Button
             type="submit"
             variant="contained"
