@@ -7,7 +7,7 @@ import { FetchUserProfile } from "../../../redux/slices/app";
 
 const Profile = () => {
   const dispatch = useDispatch();
-  
+
   useEffect(() => {
     dispatch(FetchUserProfile());
   }, []);
@@ -30,9 +30,9 @@ const Profile = () => {
             boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
           }}
         >
-          <Stack p={4} spacing={5}>
+          <Stack p={3} spacing={3}>
             {/* Header */}
-            <Stack direction="row" alignItems={"center"} spacing={3}>
+            <Stack direction="row" alignItems={"center"} spacing={1}>
               <IconButton>
                 <CaretLeft size={24} color={"#4B4B4B"} />
               </IconButton>
