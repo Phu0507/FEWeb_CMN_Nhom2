@@ -14,6 +14,8 @@ const ProfileForm = () => {
   const dispatch = useDispatch();
   const [file, setFile] = useState();
   const { user } = useSelector((state) => state.app);
+  const { myEmail } = useSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
   const [initialAvatar, setInitialAvatar] = useState(user?.avatar); // avatar gốc
 
   const ProfileSchema = Yup.object().shape({
@@ -23,7 +25,7 @@ const ProfileForm = () => {
   const defaultValues = {
     fullName: user?.fullName,
     avatar: user?.avatar,
-    email: user?.email,
+    email: myEmail,
     gender: user?.gender,
     dateOfBirth: new Date(user.dateOfBirth).toLocaleDateString("vi-VN"),
     phoneNumber: user?.phoneNumber || "Chưa cập nhật",
@@ -46,16 +48,20 @@ const ProfileForm = () => {
   const values = watch();
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     try {
       //   Send API request
       console.log("DATA", data);
-      dispatch(
+      await dispatch(
         UpdateUserProfile({
           avatar: file,
         })
       );
+      setFile(undefined); // ẩn nút sau khi cập nhật thành công
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,6 +139,7 @@ const ProfileForm = () => {
               type="submit"
               variant="contained"
               disabled={!isValid}
+              loading={isLoading}
             >
               Save
             </LoadingButton>
