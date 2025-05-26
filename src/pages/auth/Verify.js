@@ -51,9 +51,12 @@ export default function LoginPage() {
     <>
       <Stack spacing={2} sx={{ mb: 5, position: "relative" }}>
         <Typography variant="h4">{getHeading()}</Typography>
-        <Stack direction="row" spacing={0.5}>
+        <Stack spacing={0.5}>
           <Typography variant="body2">
             Sent to email ({maskEmail(email)})
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            * Please note: The OTP is only valid for 5 minutes.
           </Typography>
         </Stack>
       </Stack>

@@ -45,6 +45,7 @@ export default function Router() {
         { path: "login", element: <LoginPage /> },
         { path: "register", element: <RegisterPage /> },
         { path: "reset-password", element: <ResetPasswordPage /> },
+        { path: "login-with-otp", element: <LoginWithOTPPage /> },
         { path: "new-password", element: <NewPasswordPage /> },
         { path: "verify", element: <VerifyPage /> },
       ],
@@ -93,6 +94,9 @@ const ResetPasswordPage = Loadable(
 );
 const NewPasswordPage = Loadable(
   lazy(() => import("../pages/auth/NewPassword"))
+);
+const LoginWithOTPPage = Loadable(
+  lazy(() => import("../pages/auth/LoginWithOTP"))
 );
 
 // Settings

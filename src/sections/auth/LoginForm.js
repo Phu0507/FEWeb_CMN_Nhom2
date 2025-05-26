@@ -120,6 +120,17 @@ export default function AuthLoginForm() {
       >
         Login
       </LoadingButton>
+      <LoadingButton
+        fullWidth
+        color="primary"
+        size="large"
+        variant="outlined"
+        sx={{ mt: 2 }}
+        component={RouterLink}
+        to="/auth/login-with-otp"
+      >
+        Login with OTP
+      </LoadingButton>
     </FormProvider>
   );
 }

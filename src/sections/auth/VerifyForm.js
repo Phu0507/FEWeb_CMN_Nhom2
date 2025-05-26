@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as Yup from "yup";
 // form
 import { useForm } from "react-hook-form";
@@ -13,6 +13,10 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   VerifyEmail,
   VerifyEmailForgotPassword,
+  VerifyEmailLoginWithOTP,
+  LoginWithOTP,
+  ForgotPassword,
+  RegisterUser,
 } from "../../redux/slices/auth";
 import { LoadingButton } from "@mui/lab";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +26,7 @@ import { useNavigate } from "react-router-dom";
 export default function VerifyForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { email, otpType } = useSelector((state) => state.auth);
+  const { email, otpType, isLoading } = useSelector((state) => state.auth);
   const VerifyCodeSchema = Yup.object().shape({
     code1: Yup.string().required("Code is required"),
     code2: Yup.string().required("Code is required"),
@@ -58,13 +62,38 @@ export default function VerifyForm() {
       if (otpType === "register") {
         dispatch(VerifyEmail({ email, otp }));
       } else if (otpType === "login") {
-        // dispatch(LoginWithOTP({ email, otp }));
+        dispatch(VerifyEmailLoginWithOTP({ email, otp }));
       } else if (otpType === "forgot") {
         dispatch(VerifyEmailForgotPassword({ email, otp }, navigate));
       }
     } catch (error) {
       console.error(error);
     }
+  };
+
+  // State cho đếm ngược
+  const [cooldown, setCooldown] = useState(60);
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const handleResendOTP = () => {
+    try {
+      if (otpType === "register") {
+        dispatch(RegisterUser({ email }));
+      } else if (otpType === "login") {
+        dispatch(LoginWithOTP({ email }));
+      } else if (otpType === "forgot") {
+        dispatch(ForgotPassword({ email }));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setCooldown(60); // Reset lại đếm ngược
   };
 
   return (
@@ -95,6 +124,15 @@ export default function VerifyForm() {
         >
           Verify
         </LoadingButton>
+        <Button
+          fullWidth
+          size="large"
+          variant="text"
+          disabled={cooldown > 0}
+          onClick={handleResendOTP}
+        >
+          {cooldown > 0 ? `Gửi lại mã sau ${cooldown} giây` : "Gửi lại mã OTP"}
+        </Button>
       </Stack>
     </FormProvider>
   );

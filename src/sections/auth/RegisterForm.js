@@ -14,11 +14,13 @@ import FormProvider, {
 import { Eye, EyeSlash } from "phosphor-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RegisterUser } from "../../redux/slices/auth";
+import { useNavigate } from "react-router-dom";
 
 // ----------------------------------------------------------------------
 
 export default function AuthRegisterForm() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isLoading } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -83,7 +85,7 @@ export default function AuthRegisterForm() {
   const onSubmit = async (data) => {
     try {
       // submit data to backend
-      dispatch(RegisterUser(data));
+      dispatch(RegisterUser(data, navigate));
     } catch (error) {
       console.error(error);
       reset();

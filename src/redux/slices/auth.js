@@ -83,7 +83,7 @@ export function NewPassword(formValues, navigate) {
         dispatch(
           showSnackbar({
             severity: "error",
-            message: error.message || "OTP đã hết hạn",
+            message: error.error || "OTP đã hết hạn",
           })
         );
         dispatch(
@@ -134,7 +134,7 @@ export function ForgotPassword(formValues, navigate) {
         dispatch(
           showSnackbar({
             severity: "error",
-            message: error.message || "Email không tồn tại",
+            message: error.error || "Email này không tồn tại",
           })
         );
         dispatch(
@@ -186,7 +186,7 @@ export function VerifyEmailForgotPassword(formValues, navigate) {
         dispatch(
           showSnackbar({
             severity: "error",
-            message: error.message || "OTP không hợp lệ",
+            message: error.error || "OTP không hợp lệ",
           })
         );
         dispatch(
@@ -197,6 +197,102 @@ export function VerifyEmailForgotPassword(formValues, navigate) {
         if (!getState().auth.error) {
           navigate("/auth/new-password");
         }
+      });
+  };
+}
+
+export function LoginWithOTP(formValues, navigate) {
+  return async (dispatch, getState) => {
+    dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
+
+    await axios
+      .post(
+        "/users/signin-otp",
+        {
+          ...formValues,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then(function (response) {
+        console.log(response);
+        dispatch(
+          slice.actions.updateRegisterEmail({
+            email: formValues.email,
+            otpType: "login",
+          })
+        );
+        dispatch(
+          showSnackbar({ severity: "success", message: response.data.message })
+        );
+        dispatch(
+          slice.actions.updateIsLoading({ isLoading: false, error: false })
+        );
+      })
+      .catch(function (error) {
+        console.log(error);
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: error.error || "Email này không tồn tại",
+          })
+        );
+        dispatch(
+          slice.actions.updateIsLoading({ isLoading: false, error: true })
+        );
+      })
+      .finally(() => {
+        if (!getState().auth.error) {
+          navigate("/auth/verify");
+        }
+      });
+  };
+}
+
+export function VerifyEmailLoginWithOTP(formValues) {
+  return async (dispatch, getState) => {
+    dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
+
+    await axios
+      .post(
+        "/users/verify-login-otp",
+        {
+          ...formValues,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then(function (response) {
+        console.log(response);
+        dispatch(slice.actions.updateRegisterEmail({ email: "", otpType: "" }));
+        window.localStorage.setItem("user_id", response.data.user._id);
+        dispatch(
+          slice.actions.logIn({
+            isLoggedIn: true,
+            token: response.data.user.token,
+            user_id: response.data.user._id,
+          })
+        );
+
+        dispatch(
+          showSnackbar({ severity: "success", message: response.data.message })
+        );
+        dispatch(
+          slice.actions.updateIsLoading({ isLoading: false, error: false })
+        );
+      })
+      .catch(function (error) {
+        console.log(error);
+        dispatch(showSnackbar({ severity: "error", message: error.error }));
+        dispatch(
+          slice.actions.updateIsLoading({ error: true, isLoading: false })
+        );
       });
   };
 }
@@ -303,7 +399,7 @@ export function LogoutUser() {
   };
 }
 
-export function RegisterUser(formValues) {
+export function RegisterUser(formValues, navigate) {
   return async (dispatch, getState) => {
     dispatch(slice.actions.updateIsLoading({ isLoading: true, error: false }));
 
@@ -344,7 +440,7 @@ export function RegisterUser(formValues) {
       })
       .finally(() => {
         if (!getState().auth.error) {
-          window.location.href = "/auth/verify";
+          navigate("/auth/verify");
         }
       });
   };
@@ -387,7 +483,12 @@ export function VerifyEmail(formValues) {
       })
       .catch(function (error) {
         console.log(error);
-        dispatch(showSnackbar({ severity: "error", message: error.message }));
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: error.error || "OTP không chính xác",
+          })
+        );
         dispatch(
           slice.actions.updateIsLoading({ error: true, isLoading: false })
         );

@@ -4,22 +4,21 @@ import React from "react";
 import { CaretLeft } from "phosphor-react";
 import AuthResetPasswordForm from "../../sections/auth/ResetPasswordForm";
 
-const ResetPassword = () => {
+const LoginWithOTP = () => {
   return (
     <>
       <Stack spacing={2} sx={{ mb: 5, position: "relative" }}>
         <Typography variant="h3" paragraph>
-          Forgot your password?
+          Login with OTP
         </Typography>
 
         <Typography sx={{ color: "text.secondary", mb: 5 }}>
-          Please enter the email address associated with your account and we
-          will send you an OTP code to authenticate your password reset.
+          Please enter the email address associated with your account. We will
+          send you a One-Time Password (OTP) to verify your login.
         </Typography>
       </Stack>
 
-      {/* Reset Password Form */}
-      <AuthResetPasswordForm mode="reset-password" />
+      <AuthResetPasswordForm mode="login-otp" />
 
       <Link
         component={RouterLink}
@@ -34,10 +33,10 @@ const ResetPassword = () => {
         }}
       >
         <CaretLeft size={24} />
-        Return to login
+        Return to login with password
       </Link>
     </>
   );
 };
 
-export default ResetPassword;
+export default LoginWithOTP;

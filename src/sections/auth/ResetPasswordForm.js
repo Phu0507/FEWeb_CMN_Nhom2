@@ -6,13 +6,13 @@ import { useForm } from "react-hook-form";
 import FormProvider, { RHFTextField } from "../../components/hook-form";
 import { Button } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { ForgotPassword } from "../../redux/slices/auth";
+import { ForgotPassword, LoginWithOTP } from "../../redux/slices/auth";
 import { LoadingButton } from "@mui/lab";
 import { useNavigate } from "react-router-dom";
 
 // ----------------------------------------------------------------------
 
-export default function AuthResetPasswordForm() {
+export default function AuthResetPasswordForm({ mode }) {
   const { isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,8 +32,11 @@ export default function AuthResetPasswordForm() {
 
   const onSubmit = async (data) => {
     try {
-      //   Send API Request
-      dispatch(ForgotPassword(data, navigate));
+      if (mode === "login-otp") {
+        dispatch(LoginWithOTP(data, navigate));
+      } else if (mode === "reset-password") {
+        dispatch(ForgotPassword(data, navigate));
+      }
     } catch (error) {
       console.error(error);
     }

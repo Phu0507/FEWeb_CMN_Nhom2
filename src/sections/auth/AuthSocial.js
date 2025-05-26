@@ -1,33 +1,25 @@
 // @mui
-import { Divider, IconButton, Stack } from '@mui/material';
-import { GithubLogo, GoogleLogo, TwitterLogo } from 'phosphor-react';
+import { Divider, IconButton, Stack } from "@mui/material";
+import { GithubLogo, GoogleLogo, TwitterLogo } from "phosphor-react";
 
 // ----------------------------------------------------------------------
 
 export default function AuthSocial() {
+  const handleGoogleLogin = async () => {};
 
+  const handleGithubLogin = async () => {};
 
-  const handleGoogleLogin = async () => {
-
-  };
-
-  const handleGithubLogin = async () => {
-    
-  };
-
-  const handleTwitterLogin = async () => {
-    
-  };
+  const handleTwitterLogin = async () => {};
 
   return (
     <div>
       <Divider
         sx={{
           my: 2.5,
-          typography: 'overline',
-          color: 'text.disabled',
-          '&::before, ::after': {
-            borderTopStyle: 'dashed',
+          typography: "overline",
+          color: "text.disabled",
+          "&::before, ::after": {
+            borderTopStyle: "dashed",
           },
         }}
       >
