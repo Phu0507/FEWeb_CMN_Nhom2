@@ -72,7 +72,7 @@ const Conversation_Menu = [
     title: "Mute notifications",
   },
   {
-    title: "Clear ",
+    title: "Clear messages",
   },
   {
     title: "Delete chat",
