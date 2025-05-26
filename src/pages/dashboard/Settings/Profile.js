@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, IconButton, Stack, Typography } from "@mui/material";
 import { CaretLeft } from "phosphor-react";
 import ProfileForm from "../../../sections/dashboard/Settings/ProfileForm";
@@ -7,6 +7,7 @@ import { FetchUserProfile } from "../../../redux/slices/app";
 
 const Profile = () => {
   const dispatch = useDispatch();
+  const [showRightPane, setShowRightPane] = useState(false);
 
   useEffect(() => {
     dispatch(FetchUserProfile());
@@ -41,7 +42,10 @@ const Profile = () => {
             </Stack>
 
             {/* Profile Edit Form */}
-            <ProfileForm />
+            <ProfileForm
+              showRightPane={showRightPane}
+              setShowRightPane={setShowRightPane}
+            />
           </Stack>
         </Box>
 
@@ -56,7 +60,14 @@ const Profile = () => {
                 : theme.palette.background.paper,
             borderBottom: "6px solid #0162C4",
           }}
-        ></Box>
+        >
+          {showRightPane && (
+            <Typography variant="h6">
+              Nội dung hiển thị khi nhấn "Update" – ví dụ: Xem trước avatar mới
+              hoặc biểu mẫu mở rộng...
+            </Typography>
+          )}
+        </Box>
       </Stack>
     </>
   );

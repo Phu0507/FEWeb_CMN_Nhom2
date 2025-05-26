@@ -10,7 +10,7 @@ import { LoadingButton } from "@mui/lab";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateUserProfile } from "../../../redux/slices/app";
 
-const ProfileForm = () => {
+const ProfileForm = ({ showRightPane, setShowRightPane }) => {
   const dispatch = useDispatch();
   const [file, setFile] = useState();
   const { user } = useSelector((state) => state.app);
@@ -131,7 +131,7 @@ const ProfileForm = () => {
               variant="contained"
               onClick={handleCancel}
             >
-              Hủy
+              Cancel
             </LoadingButton>
             <LoadingButton
               color="primary"
@@ -142,6 +142,18 @@ const ProfileForm = () => {
               loading={isLoading}
             >
               Save
+            </LoadingButton>
+          </Stack>
+        )}
+        {!file && (
+          <Stack direction={"row"} justifyContent="end" spacing={2}>
+            <LoadingButton
+              color={showRightPane ? "error" : "secondary"}
+              size="large"
+              variant="contained"
+              onClick={() => setShowRightPane(!showRightPane)}
+            >
+              {showRightPane ? "Cancel" : "Update"}
             </LoadingButton>
           </Stack>
         )}
