@@ -296,47 +296,32 @@ export const ChangePasswordAPI = (newPassword, oldPassword) => {
 
 export const UpdateUserProfile = (formValues) => {
   return async (dispatch, getState) => {
-    const file = formValues.avatar;
-
-    const key = v4();
-
     try {
-      S3.getSignedUrl(
-        "putObject",
-        { Bucket: S3_BUCKET_NAME, Key: key, ContentType: `image/${file.type}` },
-        async (_err, presignedURL) => {
-          await fetch(presignedURL, {
-            method: "PUT",
+      const data = new FormData();
 
-            body: file,
+      // Nếu có avatar là file thì append
+      if (formValues.avatar) {
+        data.append("avatar", formValues.avatar);
+      }
 
-            headers: {
-              "Content-Type": file.type,
-            },
-          });
+      // Append các trường khác (ngoại trừ avatar)
+      Object.entries(formValues).forEach(([key, value]) => {
+        if (key !== "avatar" && value !== undefined && value !== null) {
+          data.append(key, value);
         }
-      );
-    } catch (error) {
-      console.log(error);
-    }
-
-    axios
-      .patch(
-        "/user/update-me",
-        { ...formValues, avatar: key },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getState().auth.token}`,
-          },
-        }
-      )
-      .then((response) => {
-        console.log(response);
-        dispatch(slice.actions.updateUser({ user: response.data.data }));
-      })
-      .catch((err) => {
-        console.log(err);
       });
+
+      const response = await axios.put("users/updateprofile", data, {
+        headers: {
+          Authorization: `Bearer ${getState().auth.token}`,
+          // Không cần set Content-Type vì axios tự set cho FormData
+        },
+      });
+
+      console.log("user có data", response.data);
+      dispatch(slice.actions.updateUser({ user: response.data }));
+    } catch (err) {
+      console.log(err);
+    }
   };
 };

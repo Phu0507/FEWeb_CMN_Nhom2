@@ -51,7 +51,6 @@ const ProfileForm = () => {
       console.log("DATA", data);
       dispatch(
         UpdateUserProfile({
-          fullName: data?.fullName,
           avatar: file,
         })
       );
