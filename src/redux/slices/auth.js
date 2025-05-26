@@ -15,6 +15,7 @@ const initialState = {
   otpType: "",
   otpValue: "",
   error: false,
+  myEmail: "",
 };
 
 const slice = createSlice({
@@ -29,11 +30,13 @@ const slice = createSlice({
       state.isLoggedIn = action.payload.isLoggedIn;
       state.token = action.payload.token;
       state.user_id = action.payload.user_id;
+      state.myEmail = action.payload.myEmail;
     },
     signOut(state, action) {
       state.isLoggedIn = false;
       state.token = "";
       state.user_id = null;
+      state.myEmail = "";
     },
     updateRegisterEmail(state, action) {
       state.email = action.payload.email;
@@ -277,6 +280,7 @@ export function VerifyEmailLoginWithOTP(formValues) {
             isLoggedIn: true,
             token: response.data.user.token,
             user_id: response.data.user._id,
+            myEmail: response.data.user.email,
           })
         );
 
@@ -317,6 +321,7 @@ export function VerifyEmailLoginWithOTP(formValues) {
 //           isLoggedIn: true,
 //           token: response.data.token,
 //           user_id: response.data._id,
+//           myEmail: response.data.user.email,
 //         })
 //       );
 
@@ -372,6 +377,7 @@ export function LoginUser(formValues) {
             isLoggedIn: true,
             token: response.data.user.token,
             user_id: response.data.user._id,
+            myEmail: response.data.user.email,
           })
         );
         window.localStorage.setItem("user_id", response.data.user._id);
@@ -471,6 +477,7 @@ export function VerifyEmail(formValues) {
             isLoggedIn: true,
             token: response.data.user.token,
             user_id: response.data.user._id,
+            myEmail: response.data.user.email,
           })
         );
 

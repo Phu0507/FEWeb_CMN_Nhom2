@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, IconButton, Stack, Typography } from "@mui/material";
 import { CaretLeft } from "phosphor-react";
 import ProfileForm from "../../../sections/dashboard/Settings/ProfileForm";
+import UpdateProfileForm from "../../../sections/dashboard/Settings/UpdateProfileForm";
 import { useDispatch } from "react-redux";
 import { FetchUserProfile } from "../../../redux/slices/app";
 
 const Profile = () => {
   const dispatch = useDispatch();
+  const [showRightPane, setShowRightPane] = useState(false);
 
   useEffect(() => {
     dispatch(FetchUserProfile());
@@ -41,7 +43,10 @@ const Profile = () => {
             </Stack>
 
             {/* Profile Edit Form */}
-            <ProfileForm />
+            <ProfileForm
+              showRightPane={showRightPane}
+              setShowRightPane={setShowRightPane}
+            />
           </Stack>
         </Box>
 
@@ -54,9 +59,21 @@ const Profile = () => {
               theme.palette.mode === "light"
                 ? "#FFF"
                 : theme.palette.background.paper,
-            borderBottom: "6px solid #0162C4",
+            borderBottom: "0px solid #0162C4",
           }}
-        ></Box>
+        >
+          {showRightPane && (
+            <Stack p={3} spacing={10} alignItems={"center"}>
+              {/* Header */}
+              <Stack direction="row" alignItems={"center"} spacing={1}>
+                <Typography variant="h5">Update Profile</Typography>
+              </Stack>
+
+              {/* Profile Edit Form */}
+              <UpdateProfileForm setShowRightPane={setShowRightPane} />
+            </Stack>
+          )}
+        </Box>
       </Stack>
     </>
   );

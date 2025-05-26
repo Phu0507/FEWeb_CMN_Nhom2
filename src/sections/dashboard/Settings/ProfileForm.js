@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import * as Yup from "yup";
 // form
 import { useForm } from "react-hook-form";
@@ -10,10 +10,12 @@ import { LoadingButton } from "@mui/lab";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateUserProfile } from "../../../redux/slices/app";
 
-const ProfileForm = () => {
+const ProfileForm = ({ showRightPane, setShowRightPane }) => {
   const dispatch = useDispatch();
   const [file, setFile] = useState();
   const { user } = useSelector((state) => state.app);
+  const { myEmail } = useSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
   const [initialAvatar, setInitialAvatar] = useState(user?.avatar); // avatar gốc
 
   const ProfileSchema = Yup.object().shape({
@@ -23,7 +25,7 @@ const ProfileForm = () => {
   const defaultValues = {
     fullName: user?.fullName,
     avatar: user?.avatar,
-    email: user?.email,
+    email: myEmail,
     gender: user?.gender,
     dateOfBirth: new Date(user.dateOfBirth).toLocaleDateString("vi-VN"),
     phoneNumber: user?.phoneNumber || "Chưa cập nhật",
@@ -44,18 +46,37 @@ const ProfileForm = () => {
   } = methods;
 
   const values = watch();
+  useEffect(() => {
+    if (user) {
+      reset({
+        fullName: user.fullName || "",
+        avatar: user.avatar || "",
+        email: myEmail || "",
+        gender: user.gender || "",
+        dateOfBirth: user.dateOfBirth
+          ? new Date(user.dateOfBirth).toLocaleDateString("vi-VN")
+          : "",
+        phoneNumber: user.phoneNumber || "Chưa cập nhật",
+      });
+      setInitialAvatar(user.avatar);
+    }
+  }, [user, myEmail, reset]);
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     try {
       //   Send API request
       console.log("DATA", data);
-      dispatch(
+      await dispatch(
         UpdateUserProfile({
           avatar: file,
         })
       );
+      setFile(undefined); // ẩn nút sau khi cập nhật thành công
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,7 +146,7 @@ const ProfileForm = () => {
               variant="contained"
               onClick={handleCancel}
             >
-              Hủy
+              Cancel
             </LoadingButton>
             <LoadingButton
               color="primary"
@@ -133,8 +154,21 @@ const ProfileForm = () => {
               type="submit"
               variant="contained"
               disabled={!isValid}
+              loading={isLoading}
             >
               Save
+            </LoadingButton>
+          </Stack>
+        )}
+        {!file && !showRightPane && (
+          <Stack direction={"row"} justifyContent="end" spacing={2}>
+            <LoadingButton
+              color={"secondary"}
+              size="large"
+              variant="contained"
+              onClick={() => setShowRightPane(true)}
+            >
+              Update
             </LoadingButton>
           </Stack>
         )}
