@@ -26,6 +26,9 @@ const initialState = {
   chat_type: null,
   room_id: null,
   call_logs: [],
+  isLoading: false,
+  keyWord: "",
+  recentSearches: [], // Thêm dòng này
 };
 
 const slice = createSlice({
@@ -79,6 +82,25 @@ const slice = createSlice({
       state.chat_type = "individual";
       state.room_id = action.payload.room_id;
     },
+    setLoading: (state, action) => {
+      state.isLoading = action.payload.isLoading;
+    },
+    addRecentSearch: (state, action) => {
+      const { keyWord, userss } = action.payload;
+      console.log("userss", userss);
+      console.log("keyWord", keyWord);
+      console.log("state at addRecentSearch:", state);
+      // Tránh trùng từ khóa
+      state.recentSearches = state.recentSearches.filter(
+        (item) => item.keyWord !== keyWord
+      );
+
+      // Giới hạn 5 từ khóa gần nhất
+      state.recentSearches.unshift({ keyWord, userss });
+      if (state.recentSearches.length > 5) {
+        state.recentSearches.pop();
+      }
+    },
   },
 });
 
@@ -122,11 +144,12 @@ export function UpdateTab(tab) {
   };
 }
 
-export function FetchUsers() {
+export function FetchUsers(keyWord) {
   return async (dispatch, getState) => {
+    dispatch(slice.actions.setLoading({ isLoading: true }));
     await axios
       .get(
-        "/user/get-users",
+        `/users?search=${keyWord}`,
 
         {
           headers: {
@@ -136,11 +159,19 @@ export function FetchUsers() {
         }
       )
       .then((response) => {
-        console.log(response);
-        dispatch(slice.actions.updateUsers({ users: response.data.data }));
+        console.log("users", response.data);
+        dispatch(slice.actions.updateUsers({ users: response.data }));
+        // dispatch(
+        //   slice.actions.addRecentSearch({
+        //     keyWord: keyWord,
+        //     userss: response.data,
+        //   })
+        // );
+        dispatch(slice.actions.setLoading({ isLoading: false }));
       })
       .catch((err) => {
         console.log(err);
+        dispatch(slice.actions.setLoading({ isLoading: false }));
       });
   };
 }
@@ -168,9 +199,10 @@ export function FetchAllUsers() {
 }
 export function FetchFriends() {
   return async (dispatch, getState) => {
+    dispatch(slice.actions.setLoading({ isLoading: true }));
     await axios
       .get(
-        "/user/get-friends",
+        "/users/listFriends",
 
         {
           headers: {
@@ -180,11 +212,13 @@ export function FetchFriends() {
         }
       )
       .then((response) => {
-        console.log(response);
-        dispatch(slice.actions.updateFriends({ friends: response.data.data }));
+        console.log(response.data);
+        dispatch(slice.actions.updateFriends({ friends: response.data }));
+        dispatch(slice.actions.setLoading({ isLoading: false }));
       })
       .catch((err) => {
         console.log(err);
+        dispatch(slice.actions.setLoading({ isLoading: false }));
       });
   };
 }

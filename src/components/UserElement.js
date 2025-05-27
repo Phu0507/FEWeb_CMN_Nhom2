@@ -49,10 +49,8 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
   },
 }));
 
-const UserElement = ({ img, firstName, lastName, online, _id }) => {
+const UserElement = ({ avatar, fullName, online, _id }) => {
   const theme = useTheme();
-
-  const name = `${firstName} ${lastName}`;
 
   return (
     <StyledChatBox
@@ -78,13 +76,13 @@ const UserElement = ({ img, firstName, lastName, online, _id }) => {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               variant="dot"
             >
-              <Avatar alt={name} src={img} />
+              <Avatar alt={fullName} src={avatar} />
             </StyledBadge>
           ) : (
-            <Avatar alt={name} src={img} />
+            <Avatar alt={fullName} src={avatar} />
           )}
           <Stack spacing={0.3}>
-            <Typography variant="subtitle2">{name}</Typography>
+            <Typography variant="subtitle2">{fullName}</Typography>
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
@@ -166,18 +164,8 @@ const FriendRequestElement = ({
 
 // FriendElement
 
-const FriendElement = ({
-  img,
-  firstName,
-  lastName,
-  incoming,
-  missed,
-  online,
-  _id,
-}) => {
+const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
   const theme = useTheme();
-
-  const name = `${firstName} ${lastName}`;
 
   return (
     <StyledChatBox
@@ -203,13 +191,13 @@ const FriendElement = ({
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               variant="dot"
             >
-              <Avatar alt={name} src={img} />
+              <Avatar alt={fullName} src={avatar} />
             </StyledBadge>
           ) : (
-            <Avatar alt={name} src={img} />
+            <Avatar alt={fullName} src={avatar} />
           )}
           <Stack spacing={0.3}>
-            <Typography variant="subtitle2">{name}</Typography>
+            <Typography variant="subtitle2">{fullName}</Typography>
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>

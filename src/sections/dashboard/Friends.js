@@ -1,12 +1,25 @@
-import React, { useEffect } from "react";
-import { Dialog, DialogContent, Slide, Stack, Tab, Tabs } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  Slide,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  CircularProgress,
+} from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
   FetchFriendRequests,
   FetchFriends,
   FetchUsers,
 } from "../../redux/slices/app";
-import { FriendElement, FriendRequestElement, UserElement } from "../../components/UserElement";
+import {
+  FriendElement,
+  FriendRequestElement,
+  UserElement,
+} from "../../components/UserElement";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -14,19 +27,81 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const UsersList = () => {
   const dispatch = useDispatch();
+  const { users, isLoading } = useSelector((state) => state.app);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [isWaitingDebounce, setIsWaitingDebounce] = useState(false);
+  useEffect(() => {
+    if (search.trim()) {
+      setIsWaitingDebounce(true);
+    } else {
+      setIsWaitingDebounce(false);
+    }
 
-  const { users } = useSelector((state) => state.app);
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setIsWaitingDebounce(false);
+    }, 1000);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [search]);
 
   useEffect(() => {
-    dispatch(FetchUsers());
-  }, []);
+    if (!debouncedSearch.trim()) return;
+    dispatch(FetchUsers(debouncedSearch));
+  }, [debouncedSearch, dispatch]);
 
+  const recentUsers = React.useMemo(() => {
+    if (!users || users.length === 0) return [];
+    return users.slice(0, 5);
+  }, [users]);
   return (
-    <>
-      {users.map((el, idx) => {
-        return <UserElement key={idx} {...el} />;
-      })}
-    </>
+    <Stack spacing={2}>
+      <TextField
+        label="Tìm kiếm người dùng"
+        variant="outlined"
+        size="small"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {/* Hiển thị spinner khi đang chờ debounce hoặc đang load dữ liệu */}
+      {(isWaitingDebounce || isLoading) && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "100px",
+          }}
+        >
+          <CircularProgress />
+        </div>
+      )}
+
+      {!isWaitingDebounce && !isLoading && (
+        <>
+          {search.trim() ? (
+            users.length > 0 ? (
+              users.map((el, idx) => <UserElement key={el.id || idx} {...el} />)
+            ) : (
+              <p>Không có người dùng</p>
+            )
+          ) : recentUsers.length > 0 ? (
+            <Stack spacing={1}>
+              <p>Kết quả tìm kiếm gần đây:</p>
+              {recentUsers.map((user, idx) => (
+                <UserElement key={user.id || idx} {...user} />
+              ))}
+            </Stack>
+          ) : (
+            <p>Không có kết quả tìm kiếm gần đây</p>
+          )}
+        </>
+      )}
+    </Stack>
   );
 };
 

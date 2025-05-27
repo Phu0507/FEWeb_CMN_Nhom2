@@ -42,11 +42,17 @@ const UpdateProfileForm = ({ setShowRightPane }) => {
     phoneNumber: Yup.string().required("Hãy cập nhật số điện thoại"),
   });
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const defaultValues = {
     fullName: user?.fullName || "",
-    dateOfBirth: user?.dateOfBirth
-      ? new Date(user.dateOfBirth).toISOString().split("T")[0] // format YYYY-MM-DD
-      : "",
+    dateOfBirth: user?.dateOfBirth ? formatDate(user.dateOfBirth) : "",
     gender: user?.gender || "",
     phoneNumber: user?.phoneNumber || "",
   };
