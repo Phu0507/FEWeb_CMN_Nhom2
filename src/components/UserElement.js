@@ -67,6 +67,22 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
   //   dispatch(FetchFriendRequests());
   // }, [dispatch]);
 
+  useEffect(() => {
+    socket.on("friendRequestRejected", ({ senderId, receiverId }) => {
+      dispatch(
+        showSnackbar({
+          severity: "error",
+          message: `${fullName} đã từ chối lời mời kết bạn của bạn.`,
+        })
+      );
+      dispatch(RemoveSendRequest(receiverId));
+    });
+
+    return () => {
+      socket.off("friendRequestRejected");
+    };
+  }, [dispatch]);
+
   const { friends } = useSelector((state) => state.app);
   const { friendRequests, sendRequests } = useSelector((state) => state.app);
   const { user_id } = useSelector((state) => state.auth);
@@ -185,10 +201,37 @@ const FriendRequestElement = ({
       dispatch(FetchFriendRequests());
     });
 
+    socket.on("friendRequestRejected", ({ senderId, receiverId }) => {
+      dispatch(
+        showSnackbar({
+          severity: "info",
+          message: `${fullName} đã từ chối lời mời kết bạn của bạn.`,
+        })
+      );
+      dispatch(RemoveSendRequest(senderId));
+    });
+
     return () => {
       socket.off("friendRequestCancelled");
+      socket.off("friendRequestRejected");
     };
   }, [dispatch]);
+
+  const handleRejectFriendRequest = () => {
+    socket.emit("rejectFriendRequest", {
+      senderId: _id, // người gửi lời mời
+      receiverId: user_id, // người từ chối
+    });
+
+    dispatch(
+      showSnackbar({
+        severity: "info",
+        message: `Bạn đã từ chối lời mời kết bạn từ ${fullName}.`,
+      })
+    );
+
+    dispatch(RemoveFriendRequest({ senderId: _id }));
+  };
 
   return (
     <StyledChatBox
@@ -225,10 +268,9 @@ const FriendRequestElement = ({
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
           <Button
-            onClick={() => {
-              dispatch(AcceptRequest(_id, user_id));
-            }}
+            onClick={handleRejectFriendRequest}
             variant="contained"
+            color="error"
           >
             Reject
           </Button>
