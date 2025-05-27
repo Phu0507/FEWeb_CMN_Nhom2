@@ -19,6 +19,7 @@ const initialState = {
   all_users: [],
   friends: [], // all friends
   friendRequests: [], // all friend requests
+  sendRequests: [],
   chat_type: null,
   room_id: null,
   call_logs: [],
@@ -80,7 +81,17 @@ const slice = createSlice({
         (req) => req._id !== senderId
       );
     },
-
+    updateSendRequests(state, action) {
+      state.sendRequests = action.payload.requests;
+    },
+    addSendRequest(state, action) {
+      state.sendRequests.push(action.payload.receiver);
+    },
+    removeSendRequest(state, action) {
+      state.sendRequests = state.sendRequests.filter(
+        (request) => request._id !== action.payload
+      );
+    },
     selectConversation(state, action) {
       state.chat_type = "individual";
       state.room_id = action.payload.room_id;
@@ -144,6 +155,24 @@ export function UpdateSidebarType(type) {
 export function UpdateTab(tab) {
   return async (dispatch, getState) => {
     dispatch(slice.actions.updateTab(tab));
+  };
+}
+
+export function AddSendRequest(receiver) {
+  return (dispatch) => {
+    dispatch(slice.actions.addSendRequest({ receiver }));
+  };
+}
+
+export function RemoveSendRequest(receiverId) {
+  return (dispatch) => {
+    dispatch(slice.actions.removeSendRequest(receiverId));
+  };
+}
+
+export function RemoveFriendRequest(senderId) {
+  return (dispatch) => {
+    dispatch(slice.actions.removeFriendRequest(senderId));
   };
 }
 
@@ -215,7 +244,7 @@ export function FetchFriends() {
         }
       )
       .then((response) => {
-        console.log(response.data);
+        console.log("friends", response.data);
         dispatch(slice.actions.updateFriends({ friends: response.data }));
         dispatch(slice.actions.setLoading({ isLoading: false }));
       })
@@ -266,6 +295,30 @@ export function FetchFriendRequests() {
         dispatch(
           slice.actions.updateFriendRequests({ requests: response.data })
         );
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+}
+
+export function FetchSendRequests() {
+  return async (dispatch, getState) => {
+    await axios
+      .get(
+        "/api/friendRequests/sent",
+
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getState().auth.token}`,
+          },
+        }
+      )
+      .then((response) => {
+        console.log("data có", response.data);
+        const receivers = response.data.map((request) => request.receiver);
+        dispatch(slice.actions.updateSendRequests({ requests: receivers }));
       })
       .catch((err) => {
         console.log(err);

@@ -14,6 +14,7 @@ import {
   FetchFriendRequests,
   FetchFriends,
   FetchUsers,
+  FetchSendRequests,
 } from "../../redux/slices/app";
 import {
   FriendElement,
@@ -31,6 +32,11 @@ const UsersList = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [isWaitingDebounce, setIsWaitingDebounce] = useState(false);
+
+  useEffect(() => {
+    dispatch(FetchSendRequests());
+  }, [dispatch]);
+
   useEffect(() => {
     if (search.trim()) {
       setIsWaitingDebounce(true);
@@ -116,9 +122,11 @@ const FriendsList = () => {
 
   return (
     <>
-      {friends.map((el, idx) => {
-        return <FriendElement key={idx} {...el} />;
-      })}
+      {friends?.length > 0 ? (
+        friends.map((el, idx) => <FriendElement key={idx} {...el} />)
+      ) : (
+        <div>Bạn chưa có bạn bè nào.</div>
+      )}
     </>
   );
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Badge,
@@ -12,7 +12,15 @@ import { styled, useTheme } from "@mui/material/styles";
 import { Chat } from "phosphor-react";
 import { socket } from "../socket";
 import { useDispatch, useSelector } from "react-redux";
-import { showSnackbar, AcceptRequest } from "../redux/slices/app";
+import {
+  showSnackbar,
+  AcceptRequest,
+  FetchSendRequests,
+  RemoveSendRequest,
+  FetchFriendRequests,
+  RemoveFriendRequest,
+  AddSendRequest,
+} from "../redux/slices/app";
 
 const user_id = window.localStorage.getItem("user_id");
 
@@ -54,11 +62,19 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 const UserElement = ({ avatar, fullName, online, _id }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  // useEffect(() => {
+  //   dispatch(FetchSendRequests());
+  //   dispatch(FetchFriendRequests());
+  // }, [dispatch]);
+
   const { friends } = useSelector((state) => state.app);
-  const { friendRequests } = useSelector((state) => state.app);
+  const { friendRequests, sendRequests } = useSelector((state) => state.app);
   const { user_id } = useSelector((state) => state.auth);
   const isFriend = friends?.some((friend) => friend._id === _id);
   const isFriendRequests = friendRequests?.some(
+    (friendRequests) => friendRequests._id === _id
+  );
+  const isSendRequests = sendRequests?.some(
     (friendRequests) => friendRequests._id === _id
   );
   const sendFriendRequest = (receiverId) => {
@@ -73,7 +89,24 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
         message: `You just sent a new friend request to ${fullName}.`,
       })
     );
+    dispatch(AddSendRequest({ _id: receiverId, fullName, avatar }));
   };
+
+  const cancelFriendRequest = (receiverId) => {
+    socket.emit("cancelFriendRequest", {
+      senderId: user_id,
+      receiverId,
+    });
+
+    dispatch(
+      showSnackbar({
+        severity: "info",
+        message: `You have canceled the friend request to ${fullName}.`,
+      })
+    );
+    dispatch(RemoveSendRequest(receiverId));
+  };
+
   return (
     <StyledChatBox
       sx={{
@@ -114,6 +147,14 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
             </Button>
           ) : isFriendRequests ? (
             <Button variant="contained">Accept</Button>
+          ) : isSendRequests ? (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => cancelFriendRequest(_id)}
+            >
+              Cancel Request
+            </Button>
           ) : (
             <Button
               color="inherit"
@@ -139,6 +180,15 @@ const FriendRequestElement = ({
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  useEffect(() => {
+    socket.on("friendRequestCancelled", (senderId) => {
+      dispatch(FetchFriendRequests());
+    });
+
+    return () => {
+      socket.off("friendRequestCancelled");
+    };
+  }, [dispatch]);
 
   return (
     <StyledChatBox
@@ -174,6 +224,14 @@ const FriendRequestElement = ({
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
+          <Button
+            onClick={() => {
+              dispatch(AcceptRequest(_id, user_id));
+            }}
+            variant="contained"
+          >
+            Reject
+          </Button>
           <Button
             onClick={() => {
               dispatch(AcceptRequest(_id, user_id));
