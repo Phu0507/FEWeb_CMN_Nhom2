@@ -11,6 +11,8 @@ import {
 import { styled, useTheme } from "@mui/material/styles";
 import { Chat } from "phosphor-react";
 import { socket } from "../socket";
+import { useDispatch, useSelector } from "react-redux";
+import { showSnackbar, AcceptRequest } from "../redux/slices/app";
 
 const user_id = window.localStorage.getItem("user_id");
 
@@ -51,6 +53,92 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 
 const UserElement = ({ avatar, fullName, online, _id }) => {
   const theme = useTheme();
+  const dispatch = useDispatch();
+  const { friends } = useSelector((state) => state.app);
+  const { friendRequests } = useSelector((state) => state.app);
+  const { user_id } = useSelector((state) => state.auth);
+  const isFriend = friends?.some((friend) => friend._id === _id);
+  const isFriendRequests = friendRequests?.some(
+    (friendRequests) => friendRequests._id === _id
+  );
+  const sendFriendRequest = (receiverId) => {
+    socket.emit("sendFriendRequest", {
+      senderId: user_id,
+      receiverId,
+    });
+
+    dispatch(
+      showSnackbar({
+        severity: "success",
+        message: `You just sent a new friend request to ${fullName}.`,
+      })
+    );
+  };
+  return (
+    <StyledChatBox
+      sx={{
+        width: "100%",
+
+        borderRadius: 1,
+
+        backgroundColor: theme.palette.background.paper,
+      }}
+      p={2}
+    >
+      <Stack
+        direction="row"
+        alignItems={"center"}
+        justifyContent="space-between"
+      >
+        <Stack direction="row" alignItems={"center"} spacing={2}>
+          {" "}
+          {online ? (
+            <StyledBadge
+              overlap="circular"
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              variant="dot"
+            >
+              <Avatar alt={fullName} src={avatar} />
+            </StyledBadge>
+          ) : (
+            <Avatar alt={fullName} src={avatar} />
+          )}
+          <Stack spacing={0.3}>
+            <Typography variant="subtitle2">{fullName}</Typography>
+          </Stack>
+        </Stack>
+        <Stack direction={"row"} spacing={2} alignItems={"center"}>
+          {isFriend ? (
+            <Button variant="contained" disabled>
+              Unfriend
+            </Button>
+          ) : isFriendRequests ? (
+            <Button variant="contained">Accept</Button>
+          ) : (
+            <Button
+              color="inherit"
+              onClick={() => sendFriendRequest(_id)}
+              variant="contained"
+            >
+              Add Friend
+            </Button>
+          )}
+        </Stack>
+      </Stack>
+    </StyledChatBox>
+  );
+};
+
+const FriendRequestElement = ({
+  avatar,
+  fullName,
+  incoming,
+  missed,
+  online,
+  _id,
+}) => {
+  const theme = useTheme();
+  const dispatch = useDispatch();
 
   return (
     <StyledChatBox
@@ -88,73 +176,11 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
           <Button
             onClick={() => {
-              socket.emit("friend_request", { to: _id, from: user_id }, () => {
-                alert("request sent");
-              });
+              dispatch(AcceptRequest(_id, user_id));
             }}
+            variant="contained"
           >
-            Send Request
-          </Button>
-        </Stack>
-      </Stack>
-    </StyledChatBox>
-  );
-};
-
-const FriendRequestElement = ({
-  img,
-  firstName,
-  lastName,
-  incoming,
-  missed,
-  online,
-  id,
-}) => {
-  const theme = useTheme();
-
-  const name = `${firstName} ${lastName}`;
-
-  return (
-    <StyledChatBox
-      sx={{
-        width: "100%",
-
-        borderRadius: 1,
-
-        backgroundColor: theme.palette.background.paper,
-      }}
-      p={2}
-    >
-      <Stack
-        direction="row"
-        alignItems={"center"}
-        justifyContent="space-between"
-      >
-        <Stack direction="row" alignItems={"center"} spacing={2}>
-          {" "}
-          {online ? (
-            <StyledBadge
-              overlap="circular"
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              variant="dot"
-            >
-              <Avatar alt={name} src={img} />
-            </StyledBadge>
-          ) : (
-            <Avatar alt={name} src={img} />
-          )}
-          <Stack spacing={0.3}>
-            <Typography variant="subtitle2">{name}</Typography>
-          </Stack>
-        </Stack>
-        <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          <Button
-            onClick={() => {
-              //  emit "accept_request" event
-              socket.emit("accept_request", { request_id: id });
-            }}
-          >
-            Accept Request
+            Accept
           </Button>
         </Stack>
       </Stack>

@@ -112,7 +112,7 @@ const FriendsList = () => {
 
   useEffect(() => {
     dispatch(FetchFriends());
-  }, []);
+  }, [dispatch]);
 
   return (
     <>
@@ -130,12 +130,12 @@ const RequestsList = () => {
 
   useEffect(() => {
     dispatch(FetchFriendRequests());
-  }, []);
+  }, [dispatch]);
 
   return (
     <>
       {friendRequests.map((el, idx) => {
-        return <FriendRequestElement key={idx} {...el.sender} id={el._id} />;
+        return <FriendRequestElement key={idx} {...el} />;
       })}
     </>
   );

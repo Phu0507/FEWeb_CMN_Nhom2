@@ -1,9 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
-// import S3 from "../../utils/s3";
-import { v4 } from "uuid";
-import S3 from "../../utils/s3";
-import { S3_BUCKET_NAME } from "../../config";
 // ----------------------------------------------------------------------
 
 const initialState = {
@@ -78,6 +74,13 @@ const slice = createSlice({
     updateFriendRequests(state, action) {
       state.friendRequests = action.payload.requests;
     },
+    removeFriendRequest: (state, action) => {
+      const { senderId } = action.payload;
+      state.friendRequests = state.friendRequests.filter(
+        (req) => req._id !== senderId
+      );
+    },
+
     selectConversation(state, action) {
       state.chat_type = "individual";
       state.room_id = action.payload.room_id;
@@ -222,11 +225,34 @@ export function FetchFriends() {
       });
   };
 }
+
+export function AcceptRequest(senderId, receiverId) {
+  return async (dispatch, getState) => {
+    await axios
+      .post(
+        "/api/friendRequests/acceptFriend",
+        { senderId, receiverId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getState().auth.token}`,
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response.data, "dữ liệu");
+        dispatch(slice.actions.removeFriendRequest({ senderId }));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+}
 export function FetchFriendRequests() {
   return async (dispatch, getState) => {
     await axios
       .get(
-        "/user/get-requests",
+        "/api/friendRequests/pending",
 
         {
           headers: {
@@ -236,9 +262,9 @@ export function FetchFriendRequests() {
         }
       )
       .then((response) => {
-        console.log(response);
+        console.log(response.data);
         dispatch(
-          slice.actions.updateFriendRequests({ requests: response.data.data })
+          slice.actions.updateFriendRequests({ requests: response.data })
         );
       })
       .catch((err) => {
