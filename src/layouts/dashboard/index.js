@@ -9,6 +9,7 @@ import {
   SelectConversation,
   showSnackbar,
   FetchFriendRequests,
+  RemoveFriendRequest,
 } from "../../redux/slices/app";
 import { socket, connectSocket } from "../../socket";
 import {
@@ -81,6 +82,10 @@ const DashboardLayout = () => {
         );
       });
 
+      socket.on("friendRequestCancelled", (senderId) => {
+        dispatch(FetchFriendRequests());
+      });
+
       // socket.on("audio_call_notification", (data) => {
       //   // TODO => dispatch an action to add this in call_queue
       //   dispatch(PushToAudioCallQueue(data));
@@ -151,6 +156,7 @@ const DashboardLayout = () => {
     // Remove event listener on component unmount
     return () => {
       socket?.off("friendRequestReceived");
+      socket.off("friendRequestCancelled");
       // socket?.off("new_friend_request");
       // socket?.off("request_accepted");
       // socket?.off("request_sent");

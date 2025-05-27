@@ -6,6 +6,7 @@ import {
   IconButton,
   Stack,
   Typography,
+  Badge,
 } from "@mui/material";
 import {
   ArchiveBox,
@@ -143,6 +144,8 @@ const Chats = () => {
     setOpenDialogNewGroup(true);
   };
 
+  const { friendRequests } = useSelector((state) => state.app);
+
   return (
     <>
       <Box
@@ -172,14 +175,27 @@ const Chats = () => {
             <Typography variant="h5">Chats</Typography>
 
             <Stack direction={"row"} alignItems="center" spacing={1}>
-              <IconButton
-                onClick={() => {
-                  handleOpenDialog();
-                }}
-                sx={{ width: "max-content" }}
-              >
-                <Users />
-              </IconButton>
+              <Box sx={{ position: "relative" }}>
+                <IconButton
+                  onClick={handleOpenDialog}
+                  sx={{ width: "max-content" }}
+                >
+                  <Users />
+                </IconButton>
+
+                {/* Badge nằm tách biệt và không ảnh hưởng đến sự kiện click */}
+                <Badge
+                  badgeContent={friendRequests.length}
+                  color="error"
+                  sx={{
+                    position: "absolute",
+                    top: 10,
+                    right: 7,
+                    pointerEvents: "none", // Không nhận sự kiện chuột
+                    transform: "translate(50%, -50%)",
+                  }}
+                />
+              </Box>
               <IconButton
                 sx={{ width: "max-content" }}
                 onClick={handleOpenDialogNewGroup}

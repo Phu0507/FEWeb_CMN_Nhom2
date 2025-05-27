@@ -196,26 +196,15 @@ const FriendRequestElement = ({
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  useEffect(() => {
-    socket.on("friendRequestCancelled", (senderId) => {
-      dispatch(FetchFriendRequests());
-    });
+  // useEffect(() => {
+  //   socket.on("friendRequestCancelled", (senderId) => {
+  //     dispatch(RemoveFriendRequest({ senderId }));
+  //   });
 
-    socket.on("friendRequestRejected", ({ senderId, receiverId }) => {
-      dispatch(
-        showSnackbar({
-          severity: "info",
-          message: `${fullName} đã từ chối lời mời kết bạn của bạn.`,
-        })
-      );
-      dispatch(RemoveSendRequest(senderId));
-    });
-
-    return () => {
-      socket.off("friendRequestCancelled");
-      socket.off("friendRequestRejected");
-    };
-  }, [dispatch]);
+  //   return () => {
+  //     socket.off("friendRequestCancelled");
+  //   };
+  // }, [dispatch]);
 
   const handleRejectFriendRequest = () => {
     socket.emit("rejectFriendRequest", {
