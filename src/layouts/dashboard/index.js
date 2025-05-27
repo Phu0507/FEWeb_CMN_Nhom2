@@ -10,6 +10,7 @@ import {
   showSnackbar,
   FetchFriendRequests,
   RemoveFriendRequest,
+  FetchFriends,
 } from "../../redux/slices/app";
 import { socket, connectSocket } from "../../socket";
 import {
@@ -86,6 +87,18 @@ const DashboardLayout = () => {
         dispatch(FetchFriendRequests());
       });
 
+      socket.on("friendRequestAccepted", ({ receiver }) => {
+        console.log("Đã được người này chấp nhận kết bạn: ", receiver);
+
+        dispatch(FetchFriends());
+        dispatch(
+          showSnackbar({
+            severity: "success",
+            message: `${receiver} kết bạn với bạn.`,
+          })
+        );
+      });
+
       // socket.on("audio_call_notification", (data) => {
       //   // TODO => dispatch an action to add this in call_queue
       //   dispatch(PushToAudioCallQueue(data));
@@ -157,6 +170,7 @@ const DashboardLayout = () => {
     return () => {
       socket?.off("friendRequestReceived");
       socket.off("friendRequestCancelled");
+      socket.off("friendRequestAccepted");
       // socket?.off("new_friend_request");
       // socket?.off("request_accepted");
       // socket?.off("request_sent");
