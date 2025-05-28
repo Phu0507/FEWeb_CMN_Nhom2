@@ -99,6 +99,10 @@ const slice = createSlice({
     setLoading: (state, action) => {
       state.isLoading = action.payload.isLoading;
     },
+    removeFriends: (state, action) => {
+      const { friendId } = action.payload;
+      state.friends = state.friends.filter((friend) => friend._id !== friendId);
+    },
     addRecentSearch: (state, action) => {
       const { keyWord, userss } = action.payload;
       console.log("userss", userss);
@@ -277,6 +281,28 @@ export function AcceptRequest(senderId, receiverId) {
       });
   };
 }
+
+export function RemoveFriends(friendId) {
+  return async (dispatch, getState) => {
+    try {
+      const { data } = await axios.put(
+        "/users/removeFriend",
+        { friendId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getState().auth.token}`,
+          },
+        }
+      );
+      console.log("Thành công:", data);
+      dispatch(slice.actions.removeFriends({ friendId }));
+    } catch (err) {
+      console.error("Lỗi khi xóa bạn:", err || err.message);
+    }
+  };
+}
+
 export function FetchFriendRequests() {
   return async (dispatch, getState) => {
     await axios

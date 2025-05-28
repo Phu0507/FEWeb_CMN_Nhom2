@@ -20,6 +20,7 @@ import {
   FetchFriendRequests,
   RemoveFriendRequest,
   AddSendRequest,
+  RemoveFriends,
 } from "../redux/slices/app";
 
 const user_id = window.localStorage.getItem("user_id");
@@ -158,7 +159,12 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
           {isFriend ? (
-            <Button variant="contained" disabled>
+            <Button
+              variant="contained"
+              onClick={() => {
+                dispatch(RemoveFriends(_id));
+              }}
+            >
               Unfriend
             </Button>
           ) : isFriendRequests ? (

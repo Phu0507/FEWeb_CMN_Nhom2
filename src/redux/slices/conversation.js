@@ -396,12 +396,22 @@ export const recallMessage = (messageId) => {
       const message = messages.find((msg) => msg._id === messageId);
 
       if (!message) {
-        alert("Không tìm thấy tin nhắn.");
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: "Không tìm thấy tin nhắn",
+          })
+        );
         return;
       }
 
       if (message.isRecalled) {
-        alert("Tin nhắn này đã được thu hồi rồi.");
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: "Tin nhắn này đã được thu hồi trước đó.",
+          })
+        );
         return;
       }
 
@@ -414,7 +424,12 @@ export const recallMessage = (messageId) => {
         messageDate.getFullYear() === today.getFullYear();
 
       if (!isSameDay) {
-        alert("Bạn chỉ có thể thu hồi tin nhắn trong ngày.");
+        dispatch(
+          showSnackbar({
+            severity: "error",
+            message: "Bạn chỉ có thể thu hồi tin nhắn trong ngày.",
+          })
+        );
         return;
       }
 

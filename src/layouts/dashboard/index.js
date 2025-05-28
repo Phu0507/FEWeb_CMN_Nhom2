@@ -99,6 +99,12 @@ const DashboardLayout = () => {
         );
       });
 
+      socket.on("friendRemoved", ({ friendId }) => {
+        console.log("Bạn bè đã bị xoá (real-time):", friendId);
+
+        dispatch(FetchFriends());
+      });
+
       // socket.on("audio_call_notification", (data) => {
       //   // TODO => dispatch an action to add this in call_queue
       //   dispatch(PushToAudioCallQueue(data));
@@ -171,6 +177,7 @@ const DashboardLayout = () => {
       socket?.off("friendRequestReceived");
       socket.off("friendRequestCancelled");
       socket.off("friendRequestAccepted");
+      socket.off("friendRemoved");
       // socket?.off("new_friend_request");
       // socket?.off("request_accepted");
       // socket?.off("request_sent");
