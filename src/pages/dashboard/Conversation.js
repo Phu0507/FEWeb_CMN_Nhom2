@@ -25,6 +25,9 @@ import {
   deleteMessage,
   editMessage,
   EditDirectMessage,
+  getConversationsFromServer,
+  UpdateConversationLastMessage,
+  UpdateConversationRecall,
 } from "../../redux/slices/conversation";
 import { socket } from "../../socket";
 import {
@@ -83,6 +86,12 @@ const Conversation = ({ isMobile, menu }) => {
   const handleSaveEditedMessage = () => {
     if (newContent.trim() === "") return;
     dispatch(editMessage(editingMessage._id, newContent));
+    dispatch(
+      UpdateConversationLastMessage({
+        messageId: editingMessage._id,
+        newContent: newContent,
+      })
+    );
     setEditingMessage(null);
     setNewContent("");
   };
@@ -92,7 +101,7 @@ const Conversation = ({ isMobile, menu }) => {
   );
 
   useEffect(() => {
-    dispatch(getCurrentMessagesFromServer(room_id));
+    dispatch(getCurrentMessagesFromServer(current_conversation?.id));
     socket.emit("joinChat", room_id);
     const handleMessage = (message) => {
       if (message.chat._id === current_conversation?.id) {
@@ -102,10 +111,17 @@ const Conversation = ({ isMobile, menu }) => {
 
     const handleRecallMessage = (updatedMsg) => {
       dispatch(RecallDirectMessage(updatedMsg._id));
+      dispatch(UpdateConversationRecall({ messageId: updatedMsg._id }));
     };
 
     const handleEdit = (updatedMsg) => {
       dispatch(EditDirectMessage(updatedMsg._id, updatedMsg.content));
+      dispatch(
+        UpdateConversationLastMessage({
+          messageId: updatedMsg._id,
+          newContent: updatedMsg.content,
+        })
+      );
     };
 
     socket.on("messageReceived", handleMessage);

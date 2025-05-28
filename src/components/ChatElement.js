@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Badge,
@@ -56,8 +56,53 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
   },
 }));
 
-const ChatElement = ({ img, name, msg, time, unread, online, id, isGroup }) => {
+const ChatElement = ({ img, name, time, unread, online, id, isGroup }) => {
   const dispatch = useDispatch();
+  const [relativeTime, setRelativeTime] = useState("");
+  useEffect(() => {
+    const updateTime = () => {
+      if (time) {
+        setRelativeTime(formatTime(time));
+      }
+    };
+
+    updateTime(); // lần đầu render
+
+    const interval = setInterval(updateTime, 30000); // cập nhật mỗi 30 giây
+
+    return () => clearInterval(interval); // dọn dẹp khi unmount
+  }, [time]);
+  const formatTime = (isoTime) => {
+    if (!isoTime) return "";
+
+    const now = new Date();
+    const time = new Date(isoTime);
+
+    const diffInSeconds = Math.floor((now - time) / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInSeconds < 60) {
+      return "Vài giây";
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} phút`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} giờ`;
+    } else if (diffInDays === 1) {
+      return "Hôm qua";
+    } else if (diffInDays <= 7) {
+      return `${diffInDays} ngày`;
+    } else {
+      const sameYear = now.getFullYear() === time.getFullYear();
+      return time.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        ...(sameYear ? {} : { year: "2-digit" }),
+      });
+    }
+  };
+
   const { room_id } = useSelector((state) => state.app);
   const selectedChatId = room_id?.toString();
 
@@ -103,11 +148,11 @@ const ChatElement = ({ img, name, msg, time, unread, online, id, isGroup }) => {
     >
       <Stack
         direction="row"
-        alignItems={"center"}
+        alignItems="center"
         justifyContent="space-between"
+        sx={{ width: "100%" }}
       >
-        <Stack direction="row" spacing={2}>
-          {" "}
+        <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
           {isGroup ? (
             <GroupAvatar members={conversation.user_id} />
           ) : online ? (
@@ -121,31 +166,109 @@ const ChatElement = ({ img, name, msg, time, unread, online, id, isGroup }) => {
           ) : (
             <Avatar alt={name} src={img} sx={{ width: 42, height: 42 }} />
           )}
-          <Stack spacing={0.3}>
-            <Typography
-              noWrap
-              sx={{
-                maxWidth: "130px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              variant="subtitle2"
+
+          <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
+            {/* Dòng 1: Tên và thời gian nằm cùng 1 hàng */}
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ width: "100%", minWidth: 0 }}
             >
-              {name}
-            </Typography>
-            <Typography variant="caption">{truncateText(msg, 20)}</Typography>
+              <Typography
+                noWrap
+                variant="subtitle2"
+                sx={{
+                  maxWidth: "calc(100% - 50px)", // dành chỗ cho thời gian
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  fontWeight: 600,
+                }}
+              >
+                {name}
+              </Typography>
+
+              <Typography
+                variant="caption"
+                sx={{ whiteSpace: "nowrap", fontWeight: 600, flexShrink: 0 }}
+              >
+                {relativeTime}
+              </Typography>
+            </Stack>
+
+            {/* Dòng 2: Tin nhắn cuối và badge nằm cùng 1 hàng */}
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ width: "100%", minWidth: 0 }}
+            >
+              <Typography
+                noWrap
+                variant="caption"
+                sx={{
+                  maxWidth: "calc(100% - 30px)", // dành chỗ cho badge
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  color: "text.secondary",
+                }}
+              >
+                {(() => {
+                  const latestMsg = conversation?.latestMessage;
+                  if (!latestMsg) return "";
+
+                  const isRecall = latestMsg?.isRecalled;
+                  const isEdited = latestMsg?.isEdited;
+                  const isGroupChat = isGroup;
+                  const sender = latestMsg?.sender;
+                  const content = latestMsg?.content || "";
+                  const userId = localStorage.getItem("user_id");
+                  const isMine = sender?._id === userId;
+
+                  if (isRecall) {
+                    return truncateText(
+                      `${isMine ? "Bạn: " : ""}[Đã thu hồi tin nhắn]`,
+                      20
+                    );
+                  }
+
+                  let displayContent = content;
+                  if (isEdited) {
+                    displayContent += " (đã sửa)";
+                  }
+
+                  let prefix = "";
+
+                  if (isGroupChat) {
+                    prefix = isMine ? "Bạn" : sender?.fullName || "";
+                  } else {
+                    // Chat đơn (1-1)
+                    if (isMine) {
+                      prefix = "Bạn";
+                    } else {
+                      prefix = ""; // không hiện tên người gửi nếu là người khác
+                    }
+                  }
+
+                  const finalText = prefix
+                    ? `${prefix}: ${displayContent}`
+                    : displayContent;
+
+                  return truncateText(finalText, 20);
+                })()}
+              </Typography>
+
+              {unread > 0 && (
+                <Badge
+                  color="primary"
+                  badgeContent={unread}
+                  sx={{ flexShrink: 0 }}
+                />
+              )}
+            </Stack>
           </Stack>
-        </Stack>
-        <Stack spacing={2} alignItems={"center"}>
-          <Typography sx={{ fontWeight: 600 }} variant="caption">
-            {time}
-          </Typography>
-          <Badge
-            className="unread-count"
-            color="primary"
-            badgeContent={unread}
-          />
         </Stack>
       </Stack>
     </StyledChatBox>

@@ -21,6 +21,7 @@ import {
   RemoveFriendRequest,
   AddSendRequest,
   RemoveFriends,
+  AddFriend,
 } from "../redux/slices/app";
 import { accessChat } from "../redux/slices/conversation";
 const user_id = window.localStorage.getItem("user_id");
@@ -272,6 +273,13 @@ const FriendRequestElement = ({
           <Button
             onClick={() => {
               dispatch(AcceptRequest(_id, user_id));
+              dispatch(
+                AddFriend({
+                  _id,
+                  fullName,
+                  avatar,
+                })
+              );
             }}
             variant="contained"
           >
@@ -331,8 +339,7 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
           </IconButton>
           <IconButton
             onClick={() => {
-              // start a new conversation
-              socket.emit("start_conversation", { to: _id, from: user_id });
+              dispatch(RemoveFriends(_id));
             }}
           >
             <UserMinus />

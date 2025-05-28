@@ -23,23 +23,24 @@ const slice = createSlice({
   reducers: {
     fetchDirectConversations(state, action) {
       const user_id = localStorage.getItem("user_id");
-      // console.log("id2", user_id);
+
       const list = action.payload.conversations.map((el) => {
         const isGroup = el.isGroupChat;
+        const latestMessage = el.latestMessage;
+        const msgTime = latestMessage?.createdAt || "";
 
         if (isGroup) {
           return {
             id: el._id,
             user_id: el.users,
             name: el.chatName,
-            time: "9:37",
-            unread: 2,
-            pinned: false,
+            time: msgTime,
+            unread: 0,
             isGroup: el.isGroupChat,
             groupAdmin: el.groupAdmin?._id,
+            latestMessage: el.latestMessage,
           };
         } else {
-          // Nếu là cuộc trò chuyện cá nhân, trả về thông tin cuộc trò chuyện
           const otherUser = el.users.find((u) => u._id.toString() !== user_id);
           return {
             id: el._id,
@@ -47,12 +48,13 @@ const slice = createSlice({
             name: otherUser?.fullName,
             online: otherUser?.status === "online",
             img: otherUser?.avatar,
-            time: "9:36",
-            unread: 1,
-            pinned: false,
+            time: msgTime,
+            unread: 0,
+            latestMessage: el.latestMessage,
           };
         }
       });
+
       state.direct_chat.conversations = list;
     },
     updateDirectConversation(state, action) {
@@ -215,6 +217,29 @@ const slice = createSlice({
       const newGroup = transformChatToConversation(action.payload.newGroup);
       state.direct_chat.conversations.unshift(newGroup);
     },
+    updateConversationLastMessage(state, action) {
+      const { messageId, newContent } = action.payload;
+
+      const conversation = state.direct_chat.conversations.find(
+        (conv) => conv.latestMessage?._id === messageId
+      );
+      console.log("tin nhắn cuối", conversation.latestMessage.content);
+      if (conversation) {
+        conversation.latestMessage.content = newContent;
+        conversation.latestMessage.isEdited = true;
+      }
+    },
+    updateConversationRecall(state, action) {
+      const { messageId } = action.payload;
+
+      const conversation = state.direct_chat.conversations.find(
+        (conv) => conv.latestMessage?._id === messageId
+      );
+
+      if (conversation && conversation.latestMessage) {
+        conversation.latestMessage.isRecalled = true;
+      }
+    },
   },
 });
 
@@ -298,7 +323,25 @@ export const AddNewGroupChat = (newGroup) => {
     dispatch(slice.actions.addNewGroupChat({ newGroup }));
   };
 };
-
+export const UpdateConversationLastMessage = ({ messageId, newContent }) => {
+  return async (dispatch, getState) => {
+    dispatch(
+      slice.actions.updateConversationLastMessage({
+        messageId,
+        newContent,
+      })
+    );
+  };
+};
+export const UpdateConversationRecall = ({ messageId }) => {
+  return async (dispatch, getState) => {
+    dispatch(
+      slice.actions.updateConversationRecall({
+        messageId,
+      })
+    );
+  };
+};
 //new api
 export const getConversationsFromServer = () => {
   return async (dispatch, getState) => {
@@ -313,7 +356,7 @@ export const getConversationsFromServer = () => {
       });
 
       const conversations = response.data; // server trả về mảng conversations
-      // console.log(conversations);
+      console.log(conversations);
       dispatch(FetchDirectConversations({ conversations }));
     } catch (error) {
       console.error("Lỗi khi fetch conversations:", error);
@@ -333,7 +376,8 @@ export const getCurrentMessagesFromServer = (conversationId) => {
         },
       });
 
-      const messages = response.data; // server trả về mảng messages
+      const messages = response.data;
+      console.log("message", response.data); // server trả về mảng messages
       dispatch(FetchCurrentMessages({ messages }));
     } catch (error) {
       console.error("Lỗi khi fetch current messages:", error);
@@ -684,38 +728,35 @@ export const addUsersToGroup = (chatId, selectedUsers) => {
   };
 };
 
-const transformChatToConversation = (chat) => {
+export const transformChatToConversation = (chat) => {
+  const msgTime = chat.latestMessage?.createdAt || "";
+
   return {
     id: chat._id,
-    name: chat.chatName,
-    isGroup: chat.isGroupChat,
     user_id: chat.users,
-    groupAdmin: chat.groupAdmin._id,
-    time: "9:37",
-    unread: 2,
-    pinned: false, // hoặc giữ nếu bạn có logic pinned
+    name: chat.chatName,
+    time: msgTime,
+    unread: 0,
+    isGroup: chat.isGroupChat,
+    groupAdmin: chat.groupAdmin?._id,
+    latestMessage: chat.latestMessage || null,
   };
 };
 
 export const transformDirectChat = (chat) => {
   const user_id = localStorage.getItem("user_id");
-
   const otherUser = chat.users.find((u) => u._id.toString() !== user_id);
+  const msgTime = chat.latestMessage?.createdAt || "";
 
   return {
     id: chat._id,
     user_id: otherUser?._id,
     name: otherUser?.fullName || "Unknown",
-    img:
-      otherUser?.avatar ||
-      "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
-    isGroup: false,
+    img: otherUser?.avatar,
     online: otherUser?.status === "online",
-    time: new Date(chat.updatedAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
+    time: msgTime,
     unread: 0,
-    pinned: false,
+    isGroup: false,
+    latestMessage: chat.latestMessage || null,
   };
 };

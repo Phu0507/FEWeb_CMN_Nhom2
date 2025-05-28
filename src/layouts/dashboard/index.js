@@ -8,9 +8,11 @@ import {
   FetchUserProfile,
   SelectConversation,
   showSnackbar,
-  FetchFriendRequests,
   RemoveFriendRequest,
-  FetchFriends,
+  AddFriendRequests,
+  AddFriend,
+  RemoveFriend,
+  RemoveSendRequest,
 } from "../../redux/slices/app";
 import { socket, connectSocket } from "../../socket";
 import {
@@ -75,7 +77,14 @@ const DashboardLayout = () => {
       socket.emit("setup", user_id);
       socket.on("friendRequestReceived", (data) => {
         // Gọi lại API để lấy danh sách friendRequests mới
-        dispatch(FetchFriendRequests());
+        console.log("hi", data);
+        dispatch(
+          AddFriendRequests({
+            _id: data.sender._id,
+            fullName: data.sender.fullName,
+            avatar: data.sender.avatar,
+          })
+        );
         dispatch(
           showSnackbar({
             severity: "success",
@@ -85,13 +94,13 @@ const DashboardLayout = () => {
       });
 
       socket.on("friendRequestCancelled", (senderId) => {
-        dispatch(FetchFriendRequests());
+        dispatch(RemoveFriendRequest(senderId));
       });
 
       socket.on("friendRequestAccepted", ({ receiver }) => {
         console.log("Đã được người này chấp nhận kết bạn: ", receiver);
-
-        dispatch(FetchFriends());
+        dispatch(RemoveSendRequest(receiver._id));
+        dispatch(AddFriend(receiver));
         dispatch(
           showSnackbar({
             severity: "success",
@@ -100,10 +109,10 @@ const DashboardLayout = () => {
         );
       });
 
-      socket.on("friendRemoved", ({ friendId }) => {
-        console.log("Bạn bè đã bị xoá (real-time):", friendId);
+      socket.on("youWereRemoved", ({ userId }) => {
+        console.log("Bạn bè đã bị xoá (real-time):", userId);
 
-        dispatch(FetchFriends());
+        dispatch(RemoveFriend(userId));
       });
 
       socket.on("newMessageToUser", ({ chatId, message }) => {
@@ -112,7 +121,7 @@ const DashboardLayout = () => {
         dispatch(
           showSnackbar({
             severity: "success",
-            message: "có tin nhắn mới",
+            message: `có tin nhắn mới là: ${message.content} từ ${message.sender.fullName}`,
           })
         );
       });
@@ -189,7 +198,7 @@ const DashboardLayout = () => {
       socket?.off("friendRequestReceived");
       socket.off("friendRequestCancelled");
       socket.off("friendRequestAccepted");
-      socket.off("friendRemoved");
+      socket.off("youWereRemoved");
       socket.off("newMessageToUser");
       // socket?.off("new_friend_request");
       // socket?.off("request_accepted");

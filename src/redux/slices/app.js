@@ -72,8 +72,14 @@ const slice = createSlice({
     updateFriends(state, action) {
       state.friends = action.payload.friends;
     },
+    addFriends(state, action) {
+      state.friends.push(action.payload.receiver);
+    },
     updateFriendRequests(state, action) {
       state.friendRequests = action.payload.requests;
+    },
+    addFriendRequests(state, action) {
+      state.friendRequests.push(action.payload.receiver);
     },
     removeFriendRequest: (state, action) => {
       const { senderId } = action.payload;
@@ -99,7 +105,7 @@ const slice = createSlice({
     setLoading: (state, action) => {
       state.isLoading = action.payload.isLoading;
     },
-    removeFriends: (state, action) => {
+    removeFriends(state, action) {
       const { friendId } = action.payload;
       state.friends = state.friends.filter((friend) => friend._id !== friendId);
     },
@@ -161,13 +167,21 @@ export function UpdateTab(tab) {
     dispatch(slice.actions.updateTab(tab));
   };
 }
-
+export function AddFriendRequests(receiver) {
+  return (dispatch) => {
+    dispatch(slice.actions.addFriendRequests({ receiver }));
+  };
+}
 export function AddSendRequest(receiver) {
   return (dispatch) => {
     dispatch(slice.actions.addSendRequest({ receiver }));
   };
 }
-
+export function AddFriend(receiver) {
+  return (dispatch) => {
+    dispatch(slice.actions.addFriends({ receiver }));
+  };
+}
 export function RemoveSendRequest(receiverId) {
   return (dispatch) => {
     dispatch(slice.actions.removeSendRequest(receiverId));
@@ -177,6 +191,11 @@ export function RemoveSendRequest(receiverId) {
 export function RemoveFriendRequest(senderId) {
   return (dispatch) => {
     dispatch(slice.actions.removeFriendRequest(senderId));
+  };
+}
+export function RemoveFriend(friendId) {
+  return (dispatch) => {
+    dispatch(slice.actions.removeFriends({ friendId }));
   };
 }
 
