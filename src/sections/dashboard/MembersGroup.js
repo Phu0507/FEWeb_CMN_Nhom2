@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import {
   Box,
@@ -24,10 +24,16 @@ import {
   transferGroupAdmin,
   removeGroupMember,
 } from "../../redux/slices/conversation";
+import ConfirmDialog from "./Settings/ConfirmDialog";
 
 const MembersGroup = () => {
   const dispatch = useDispatch();
   const user_id = localStorage.getItem("user_id");
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmContent, setConfirmContent] = useState("");
+  const [confirmAction, setConfirmAction] = useState(() => () => {});
+
   const { conversations, current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
   );
@@ -44,6 +50,15 @@ const MembersGroup = () => {
       (conv) => conv.id === current_conversation.id
     );
   }
+  const showConfirmDialog = (title, content, onConfirmAction) => {
+    setConfirmTitle(title);
+    setConfirmContent(content);
+    setConfirmAction(() => () => {
+      onConfirmAction();
+      setConfirmDialogOpen(false);
+    });
+    setConfirmDialogOpen(true);
+  };
 
   const theme = useTheme();
   const isDesktop = useResponsive("up", "md");
@@ -73,149 +88,177 @@ const MembersGroup = () => {
   };
 
   const handleMenuItemClick = (action) => {
-    console.log(`Action "${action}" on user:`, selectedUser, selectedChat);
     if (action === 1) {
-      dispatch(transferGroupAdmin(selectedChat, selectedUser));
-      console.log("thanh cong");
+      console.log("ten", selectedUser);
+      showConfirmDialog(
+        "Chuyển quyền trưởng nhóm",
+        `Bạn có chắc chắn muốn chuyển quyền trưởng nhóm cho ${
+          selectedUser?.fullName || "người dùng này"
+        }?`,
+        () => {
+          dispatch(transferGroupAdmin(selectedChat, selectedUser?._id));
+          console.log("Chuyển quyền thành công");
+          handleMenuClose();
+        }
+      );
     } else if (action === 2) {
-      dispatch(removeGroupMember(selectedChat, selectedUser));
-      console.log("xoa thanh công");
+      showConfirmDialog(
+        "Xóa thành viên khỏi nhóm",
+        `Bạn có chắc chắn muốn xóa ${
+          selectedUser?.fullName || "người dùng này"
+        } khỏi nhóm không?`,
+        () => {
+          dispatch(removeGroupMember(selectedChat, selectedUser?._id));
+          console.log("Xóa thành viên thành công");
+          handleMenuClose();
+        }
+      );
     }
-    handleMenuClose();
   };
 
   return (
-    <Box sx={{ width: !isDesktop ? "100vw" : 320, maxHeight: "100vh" }}>
-      <Stack sx={{ height: "100%" }}>
-        <Box
-          sx={{
-            boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
-            width: "100%",
-            backgroundColor:
-              theme.palette.mode === "light"
-                ? "#F8FAFF"
-                : theme.palette.background,
-          }}
-        >
+    <>
+      <Box sx={{ width: !isDesktop ? "100vw" : 320, maxHeight: "100vh" }}>
+        <Stack sx={{ height: "100%" }}>
+          <Box
+            sx={{
+              boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
+              width: "100%",
+              backgroundColor:
+                theme.palette.mode === "light"
+                  ? "#F8FAFF"
+                  : theme.palette.background,
+            }}
+          >
+            <Stack
+              sx={{ height: "100%", p: 2 }}
+              direction="row"
+              alignItems={"center"}
+              spacing={3}
+            >
+              <IconButton
+                onClick={() => dispatch(UpdateSidebarType("CONTACT"))}
+              >
+                <ArrowLeft />
+              </IconButton>
+              <Typography variant="subtitle2">Members</Typography>
+            </Stack>
+          </Box>
+
           <Stack
-            sx={{ height: "100%", p: 2 }}
-            direction="row"
-            alignItems={"center"}
+            sx={{
+              height: "100%",
+              position: "relative",
+              flexGrow: 1,
+              overflow: "scroll",
+            }}
             spacing={3}
+            padding={value === 1 ? 1 : 3}
           >
-            <IconButton onClick={() => dispatch(UpdateSidebarType("CONTACT"))}>
-              <ArrowLeft />
-            </IconButton>
-            <Typography variant="subtitle2">Members</Typography>
-          </Stack>
-        </Box>
-
-        <Stack
-          sx={{
-            height: "100%",
-            position: "relative",
-            flexGrow: 1,
-            overflow: "scroll",
-          }}
-          spacing={3}
-          padding={value === 1 ? 1 : 3}
-        >
-          {conversation?.user_id
-            ?.slice()
-            .sort((a, b) => {
-              if (a._id === conversation.groupAdmin) return -1;
-              if (b._id === conversation.groupAdmin) return 1;
-              return 0;
-            })
-            .map((user, index) => (
-              <Stack
-                direction="row"
-                spacing={2}
-                sx={{
-                  backgroundColor:
-                    theme.palette.mode === "light"
-                      ? "#f7f7f7"
-                      : theme.palette.background.paper,
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  borderRadius: 1,
-                }}
-                p={2}
-                key={index}
-              >
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar alt={user.fullName} src={user.avatar} />
-                  <Stack spacing={0}>
-                    <Typography
-                      noWrap
-                      sx={{
-                        maxWidth: "130px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                      variant="subtitle2"
-                    >
-                      {user.fullName}
-                    </Typography>
-                    {user._id === conversation.groupAdmin && (
-                      <Badge
-                        badgeContent={"Admin"}
+            {conversation?.user_id
+              ?.slice()
+              .sort((a, b) => {
+                if (a._id === conversation.groupAdmin) return -1;
+                if (b._id === conversation.groupAdmin) return 1;
+                return 0;
+              })
+              .map((user, index) => (
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{
+                    backgroundColor:
+                      theme.palette.mode === "light"
+                        ? "#f7f7f7"
+                        : theme.palette.background.paper,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderRadius: 1,
+                  }}
+                  p={2}
+                  key={index}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar alt={user.fullName} src={user.avatar} />
+                    <Stack spacing={0}>
+                      <Typography
+                        noWrap
                         sx={{
-                          "& .MuiBadge-badge": {
-                            fontSize: 10,
-                            height: 15,
-                            minWidth: 30,
-                            transform: "none",
-                            position: "static",
-                            backgroundColor: theme.palette.primary.main,
-                            color: "#fff",
-                          },
+                          maxWidth: "130px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
-                      />
-                    )}
+                        variant="subtitle2"
+                      >
+                        {user.fullName}
+                      </Typography>
+                      {user._id === conversation.groupAdmin && (
+                        <Badge
+                          badgeContent={"Admin"}
+                          sx={{
+                            "& .MuiBadge-badge": {
+                              fontSize: 10,
+                              height: 15,
+                              minWidth: 30,
+                              transform: "none",
+                              position: "static",
+                              backgroundColor: theme.palette.primary.main,
+                              color: "#fff",
+                            },
+                          }}
+                        />
+                      )}
+                    </Stack>
                   </Stack>
+
+                  {user_id === conversation.groupAdmin &&
+                    user._id !== user_id && (
+                      <IconButton
+                        onClick={(e) =>
+                          handleMenuClick(e, user, conversation.id)
+                        }
+                      >
+                        <DotsThreeOutline />
+                      </IconButton>
+                    )}
                 </Stack>
+              ))}
 
-                {user_id === conversation.groupAdmin &&
-                  user._id !== user_id && (
-                    <IconButton
-                      onClick={(e) =>
-                        handleMenuClick(e, user._id, conversation.id)
-                      }
-                    >
-                      <DotsThreeOutline />
-                    </IconButton>
-                  )}
-              </Stack>
-            ))}
-
-          {/* Menu hiển thị khi click icon */}
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleMenuClose}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "right",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-          >
-            {Members_Menu.map((option, index) => (
-              <MenuItem
-                key={index}
-                onClick={() => handleMenuItemClick(option.id)}
-              >
-                {option.title}
-              </MenuItem>
-            ))}
-          </Menu>
+            {/* Menu hiển thị khi click icon */}
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              {Members_Menu.map((option, index) => (
+                <MenuItem
+                  key={index}
+                  onClick={() => handleMenuItemClick(option.id)}
+                >
+                  {option.title}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Stack>
         </Stack>
-      </Stack>
-    </Box>
+      </Box>
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        title={confirmTitle}
+        content={confirmContent}
+        onClose={() => setConfirmDialogOpen(false)}
+        onConfirm={confirmAction}
+      />
+    </>
   );
 };
 

@@ -153,7 +153,7 @@ const RequestsList = () => {
 
 const Friends = ({ open, handleClose }) => {
   const [value, setValue] = React.useState(0);
-  const { friendRequests } = useSelector((state) => state.app);
+  const { friendRequests, friends } = useSelector((state) => state.app);
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -173,7 +173,7 @@ const Friends = ({ open, handleClose }) => {
       <Stack p={2} sx={{ width: "100%" }}>
         <Tabs value={value} onChange={handleChange} centered>
           <Tab label="Explore" />
-          <Tab label="Friends" />
+          <Tab label={`Friends (${friends.length})`} />
           <Tab
             label={
               <Box

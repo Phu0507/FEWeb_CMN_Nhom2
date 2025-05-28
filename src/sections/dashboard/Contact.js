@@ -88,7 +88,7 @@ const Contact = () => {
   const { current_conversation, current_messages } = useSelector(
     (state) => state.conversation.direct_chat
   );
-
+  console.log("hoi", current_conversation);
   const theme = useTheme();
 
   const isDesktop = useResponsive("up", "md");
@@ -166,9 +166,11 @@ const Contact = () => {
               <Typography variant="article" fontWeight={600}>
                 {current_conversation?.name}
               </Typography>
-              <Typography variant="body2" fontWeight={500}>
-                {"+91 62543 28 739"}
-              </Typography>
+              {!current_conversation?.isGroup && (
+                <Typography variant="body2" fontWeight={500}>
+                  {current_conversation?.email}
+                </Typography>
+              )}
             </Stack>
           </Stack>
           <Stack

@@ -51,6 +51,7 @@ const slice = createSlice({
             time: msgTime,
             unread: 0,
             latestMessage: el.latestMessage,
+            email: otherUser?.email,
           };
         }
       });
@@ -356,7 +357,7 @@ export const getConversationsFromServer = () => {
       });
 
       const conversations = response.data; // server trả về mảng conversations
-      console.log(conversations);
+      console.log("ý", conversations);
       dispatch(FetchDirectConversations({ conversations }));
     } catch (error) {
       console.error("Lỗi khi fetch conversations:", error);
@@ -757,6 +758,7 @@ export const transformDirectChat = (chat) => {
     time: msgTime,
     unread: 0,
     isGroup: false,
+    email: otherUser?.email,
     latestMessage: chat.latestMessage || null,
   };
 };

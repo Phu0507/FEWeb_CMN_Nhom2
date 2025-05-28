@@ -22,7 +22,7 @@ import {
   PencilLine,
   UserPlus,
 } from "phosphor-react";
-import { faker } from "@faker-js/faker";
+import GroupAvatar from "../../contexts/GroupAvatar";
 import useResponsive from "../../hooks/useResponsive";
 import { ToggleSidebar, UpdateSidebarType } from "../../redux/slices/app";
 import { useDispatch, useSelector } from "react-redux";
@@ -34,6 +34,7 @@ import {
   removeGroup,
 } from "../../redux/slices/conversation";
 import AddUserGroup from "../../sections/dashboard/AddUserGroup";
+import ConfirmDialog from "../../sections/dashboard/Settings/ConfirmDialog";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -68,15 +69,15 @@ const Conversation_Menu = [
   {
     title: "Contact info",
   },
-  {
-    title: "Mute notifications",
-  },
-  {
-    title: "Clear messages",
-  },
-  {
-    title: "Delete chat",
-  },
+  // {
+  //   title: "Mute notifications",
+  // },
+  // {
+  //   title: "Clear messages",
+  // },
+  // {
+  //   title: "Delete chat",
+  // },
   {
     title: "Remove Group",
   },
@@ -93,6 +94,21 @@ const ChatHeader = () => {
   const [hovered, setHovered] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDialogAddUser, setOpenDialogAddUser] = useState(false);
+
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmContent, setConfirmContent] = useState("");
+  const [confirmAction, setConfirmAction] = useState(() => () => {});
+
+  const showConfirmDialog = (title, content, onConfirmAction) => {
+    setConfirmTitle(title);
+    setConfirmContent(content);
+    setConfirmAction(() => () => {
+      onConfirmAction();
+      setConfirmDialogOpen(false);
+    });
+    setConfirmDialogOpen(true);
+  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -149,13 +165,24 @@ const ChatHeader = () => {
         dispatch(UpdateSidebarType("CONTACT"));
       }, 100);
     } else if (title === "Leave Group") {
-      dispatch(removeGroupMember(current_conversation.id, currentUserId));
-      console.log("Rời nhóm thành công");
+      showConfirmDialog(
+        "Rời nhóm",
+        "Bạn có chắc chắn muốn rời khỏi nhóm này không?",
+        () => {
+          dispatch(removeGroupMember(current_conversation.id, currentUserId));
+          console.log("Rời nhóm thành công");
+        }
+      );
     } else if (title === "Remove Group") {
-      dispatch(removeGroup(current_conversation.id));
-      console.log("Xoa nhom thanh cong");
+      showConfirmDialog(
+        "Xóa nhóm",
+        "Bạn có chắc chắn muốn xóa nhóm này không? Hành động này không thể hoàn tác.",
+        () => {
+          dispatch(removeGroup(current_conversation.id));
+          console.log("Xóa nhóm thành công");
+        }
+      );
     }
-    // Có thể mở rộng thêm else if cho các title khác như "Delete chat", "Mute notifications", ...
   };
 
   const [conversationMenuAnchorEl, setConversationMenuAnchorEl] =
@@ -193,21 +220,29 @@ const ChatHeader = () => {
                 dispatch(ToggleSidebar());
                 dispatch(UpdateSidebarType("CONTACT"));
               }}
+              sx={{ cursor: "pointer" }}
             >
-              <StyledBadge
-                overlap="circular"
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }}
-                variant="dot"
-                sx={{ cursor: "pointer" }}
-              >
+              {current_conversation?.isGroup ? (
+                <GroupAvatar members={current_conversation?.user_id} />
+              ) : current_conversation?.online ? (
+                <StyledBadge
+                  overlap="circular"
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  variant="dot"
+                >
+                  <Avatar
+                    alt={current_conversation?.name}
+                    src={current_conversation?.img}
+                    sx={{ width: 42, height: 42 }}
+                  />
+                </StyledBadge>
+              ) : (
                 <Avatar
                   alt={current_conversation?.name}
                   src={current_conversation?.img}
+                  sx={{ width: 42, height: 42 }}
                 />
-              </StyledBadge>
+              )}
             </Box>
             <Stack spacing={0.2}>
               <Box
@@ -370,6 +405,13 @@ const ChatHeader = () => {
           handleClose={handleCloseDialogAddUser}
         />
       )}
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        title={confirmTitle}
+        content={confirmContent}
+        onClose={() => setConfirmDialogOpen(false)}
+        onConfirm={confirmAction}
+      />
     </>
   );
 };
