@@ -729,7 +729,7 @@ export const addUsersToGroup = (chatId, selectedUsers) => {
 };
 
 export const transformChatToConversation = (chat) => {
-  const msgTime = chat.latestMessage?.createdAt || "";
+  const msgTime = chat.latestMessage?.createdAt || new Date().toISOString();
 
   return {
     id: chat._id,

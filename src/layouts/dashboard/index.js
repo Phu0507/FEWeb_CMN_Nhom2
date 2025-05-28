@@ -13,6 +13,7 @@ import {
   AddFriend,
   RemoveFriend,
   RemoveSendRequest,
+  FetchFriends,
 } from "../../redux/slices/app";
 import { socket, connectSocket } from "../../socket";
 import {
@@ -51,6 +52,7 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     dispatch(FetchUserProfile());
+    dispatch(FetchFriends());
   }, [dispatch]);
 
   const handleCloseAudioDialog = () => {

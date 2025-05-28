@@ -9,7 +9,13 @@ import {
   Button,
 } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
-import { Chat, UserMinus, UserCircleMinus } from "phosphor-react";
+import {
+  Chat,
+  UserMinus,
+  UserCircleMinus,
+  CheckCircle,
+  X,
+} from "phosphor-react";
 import { socket } from "../socket";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -162,6 +168,7 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
           {isFriend ? (
             <Button
               variant="contained"
+              color="inherit"
               onClick={() => {
                 dispatch(RemoveFriends(_id));
               }}
@@ -169,7 +176,21 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
               Unfriend
             </Button>
           ) : isFriendRequests ? (
-            <Button variant="contained">Accept</Button>
+            <Button
+              onClick={() => {
+                dispatch(AcceptRequest(_id, user_id));
+                dispatch(
+                  AddFriend({
+                    _id,
+                    fullName,
+                    avatar,
+                  })
+                );
+              }}
+              variant="contained"
+            >
+              Accept
+            </Button>
           ) : isSendRequests ? (
             <Button
               variant="contained"
@@ -179,11 +200,7 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
               Cancel Request
             </Button>
           ) : (
-            <Button
-              color="inherit"
-              onClick={() => sendFriendRequest(_id)}
-              variant="contained"
-            >
+            <Button onClick={() => sendFriendRequest(_id)} variant="contained">
               Add Friend
             </Button>
           )}
@@ -263,14 +280,15 @@ const FriendRequestElement = ({
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          <Button
+          <IconButton
             onClick={handleRejectFriendRequest}
             variant="contained"
             color="error"
           >
-            Reject
-          </Button>
-          <Button
+            <X />
+          </IconButton>
+          <IconButton
+            color="success"
             onClick={() => {
               dispatch(AcceptRequest(_id, user_id));
               dispatch(
@@ -283,8 +301,8 @@ const FriendRequestElement = ({
             }}
             variant="contained"
           >
-            Accept
-          </Button>
+            <CheckCircle />
+          </IconButton>
         </Stack>
       </Stack>
     </StyledChatBox>
@@ -334,6 +352,8 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
             onClick={() => {
               dispatch(accessChat(_id));
             }}
+            color="secondary"
+            variant="contained"
           >
             <Chat />
           </IconButton>
@@ -341,6 +361,8 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
             onClick={() => {
               dispatch(RemoveFriends(_id));
             }}
+            color="error"
+            variant="contained"
           >
             <UserMinus />
           </IconButton>
