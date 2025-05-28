@@ -68,7 +68,7 @@ const Chats = () => {
   // }, [dispatch, conversations]);
 
   useEffect(() => {
-    socket.emit("setup", user_id);
+    // socket.emit("setup", user_id);
 
     const handleAdmin = (chatId, newAdminId) => {
       console.log("test socket 888");

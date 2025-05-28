@@ -8,6 +8,8 @@ import {
   Tabs,
   TextField,
   CircularProgress,
+  Badge,
+  Box,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -151,7 +153,7 @@ const RequestsList = () => {
 
 const Friends = ({ open, handleClose }) => {
   const [value, setValue] = React.useState(0);
-
+  const { friendRequests } = useSelector((state) => state.app);
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -172,7 +174,33 @@ const Friends = ({ open, handleClose }) => {
         <Tabs value={value} onChange={handleChange} centered>
           <Tab label="Explore" />
           <Tab label="Friends" />
-          <Tab label="Requests" />
+          <Tab
+            label={
+              <Box
+                sx={{
+                  position: "relative",
+                  display: "inline-block",
+                  overflow: "visible",
+                }}
+              >
+                Requests
+                <Badge
+                  badgeContent={friendRequests.length}
+                  color="error"
+                  sx={{
+                    position: "absolute",
+                    top: -5,
+                    right: 30,
+                    "& .MuiBadge-badge": {
+                      fontSize: 10,
+                      height: 16,
+                      minWidth: 16,
+                    },
+                  }}
+                />
+              </Box>
+            }
+          />
         </Tabs>
       </Stack>
       <DialogContent>

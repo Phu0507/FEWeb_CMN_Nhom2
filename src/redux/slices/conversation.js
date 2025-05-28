@@ -628,6 +628,35 @@ export const createGroup = (groupChatName, selectedUsers) => {
   };
 };
 
+export const accessChat = (userId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      const response = await axios.post(
+        "/api/chat",
+        { userId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const chat = response.data;
+      console.log("chat don", response.data);
+      const singleChat = transformDirectChat(chat);
+      dispatch(SelectConversation({ room_id: singleChat.id }));
+      dispatch(SetCurrentConversation({ conversation: singleChat }));
+      dispatch(ToggleFetchAgain());
+    } catch (error) {
+      console.error("Lỗi khi tạo nhóm:", error);
+      throw error; // nếu muốn handle ở component
+    }
+  };
+};
+
 export const addUsersToGroup = (chatId, selectedUsers) => {
   return async (dispatch, getState) => {
     try {
@@ -665,5 +694,28 @@ const transformChatToConversation = (chat) => {
     time: "9:37",
     unread: 2,
     pinned: false, // hoặc giữ nếu bạn có logic pinned
+  };
+};
+
+export const transformDirectChat = (chat) => {
+  const user_id = localStorage.getItem("user_id");
+
+  const otherUser = chat.users.find((u) => u._id.toString() !== user_id);
+
+  return {
+    id: chat._id,
+    user_id: otherUser?._id,
+    name: otherUser?.fullName || "Unknown",
+    img:
+      otherUser?.avatar ||
+      "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+    isGroup: false,
+    online: otherUser?.status === "online",
+    time: new Date(chat.updatedAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    unread: 0,
+    pinned: false,
   };
 };

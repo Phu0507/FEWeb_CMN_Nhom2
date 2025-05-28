@@ -9,7 +9,7 @@ import {
   Button,
 } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
-import { Chat } from "phosphor-react";
+import { Chat, UserMinus, UserCircleMinus } from "phosphor-react";
 import { socket } from "../socket";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -22,7 +22,7 @@ import {
   AddSendRequest,
   RemoveFriends,
 } from "../redux/slices/app";
-
+import { accessChat } from "../redux/slices/conversation";
 const user_id = window.localStorage.getItem("user_id");
 
 const StyledChatBox = styled(Box)(({ theme }) => ({
@@ -287,7 +287,7 @@ const FriendRequestElement = ({
 
 const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
   const theme = useTheme();
-
+  const dispatch = useDispatch();
   return (
     <StyledChatBox
       sx={{
@@ -324,11 +324,18 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
           <IconButton
             onClick={() => {
+              dispatch(accessChat(_id));
+            }}
+          >
+            <Chat />
+          </IconButton>
+          <IconButton
+            onClick={() => {
               // start a new conversation
               socket.emit("start_conversation", { to: _id, from: user_id });
             }}
           >
-            <Chat />
+            <UserMinus />
           </IconButton>
         </Stack>
       </Stack>

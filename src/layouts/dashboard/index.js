@@ -17,6 +17,7 @@ import {
   UpdateDirectConversation,
   AddDirectConversation,
   AddDirectMessage,
+  getConversationsFromServer,
 } from "../../redux/slices/conversation";
 import AudioCallNotification from "../../sections/dashboard/Audio/CallNotification";
 import VideoCallNotification from "../../sections/dashboard/video/CallNotification";
@@ -94,7 +95,7 @@ const DashboardLayout = () => {
         dispatch(
           showSnackbar({
             severity: "success",
-            message: `${receiver} kết bạn với bạn.`,
+            message: `${receiver.fullName} đã chấp nhận lời mời kết bạn.`,
           })
         );
       });
@@ -103,6 +104,17 @@ const DashboardLayout = () => {
         console.log("Bạn bè đã bị xoá (real-time):", friendId);
 
         dispatch(FetchFriends());
+      });
+
+      socket.on("newMessageToUser", ({ chatId, message }) => {
+        console.log("Tin nhắn mới đến:", message);
+        dispatch(getConversationsFromServer());
+        dispatch(
+          showSnackbar({
+            severity: "success",
+            message: "có tin nhắn mới",
+          })
+        );
       });
 
       // socket.on("audio_call_notification", (data) => {
@@ -178,6 +190,7 @@ const DashboardLayout = () => {
       socket.off("friendRequestCancelled");
       socket.off("friendRequestAccepted");
       socket.off("friendRemoved");
+      socket.off("newMessageToUser");
       // socket?.off("new_friend_request");
       // socket?.off("request_accepted");
       // socket?.off("request_sent");
