@@ -94,13 +94,14 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
   const { friends } = useSelector((state) => state.app);
   const { friendRequests, sendRequests } = useSelector((state) => state.app);
   const { user_id } = useSelector((state) => state.auth);
-  const isFriend = friends?.some((friend) => friend._id === _id);
-  const isFriendRequests = friendRequests?.some(
-    (friendRequests) => friendRequests._id === _id
-  );
-  const isSendRequests = sendRequests?.some(
-    (friendRequests) => friendRequests._id === _id
-  );
+  const isFriend =
+    Array.isArray(friends) && friends.some((friend) => friend._id === _id);
+  const isFriendRequests =
+    Array.isArray(friendRequests) &&
+    friendRequests?.some((friendRequests) => friendRequests._id === _id);
+  const isSendRequests =
+    Array.isArray(sendRequests) &&
+    sendRequests?.some((friendRequests) => friendRequests._id === _id);
   const sendFriendRequest = (receiverId) => {
     socket.emit("sendFriendRequest", {
       senderId: user_id,

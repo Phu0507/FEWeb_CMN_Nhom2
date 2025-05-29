@@ -173,7 +173,7 @@ const Friends = ({ open, handleClose }) => {
       <Stack p={2} sx={{ width: "100%" }}>
         <Tabs value={value} onChange={handleChange} centered>
           <Tab label="Explore" />
-          <Tab label={`Friends (${friends.length})`} />
+          <Tab label={`Friends (${friends.length || 0})`} />
           <Tab
             label={
               <Box

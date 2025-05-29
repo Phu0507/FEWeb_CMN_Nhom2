@@ -185,7 +185,7 @@ const Chats = () => {
 
                 {/* Badge nằm tách biệt và không ảnh hưởng đến sự kiện click */}
                 <Badge
-                  badgeContent={friendRequests.length}
+                  badgeContent={friendRequests.length || 0}
                   color="error"
                   sx={{
                     position: "absolute",
