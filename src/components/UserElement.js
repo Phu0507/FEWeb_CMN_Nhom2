@@ -70,26 +70,22 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 const UserElement = ({ avatar, fullName, online, _id }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+
   // useEffect(() => {
-  //   dispatch(FetchSendRequests());
-  //   dispatch(FetchFriendRequests());
+  //   socket.on("friendRequestRejected", ({ senderId, receiverId }) => {
+  //     dispatch(
+  //       showSnackbar({
+  //         severity: "error",
+  //         message: `${fullName} đã từ chối lời mời kết bạn của bạn.`,
+  //       })
+  //     );
+  //     dispatch(RemoveSendRequest(receiverId));
+  //   });
+
+  //   return () => {
+  //     socket.off("friendRequestRejected");
+  //   };
   // }, [dispatch]);
-
-  useEffect(() => {
-    socket.on("friendRequestRejected", ({ senderId, receiverId }) => {
-      dispatch(
-        showSnackbar({
-          severity: "error",
-          message: `${fullName} đã từ chối lời mời kết bạn của bạn.`,
-        })
-      );
-      dispatch(RemoveSendRequest(receiverId));
-    });
-
-    return () => {
-      socket.off("friendRequestRejected");
-    };
-  }, [dispatch]);
 
   const { friends } = useSelector((state) => state.app);
   const { friendRequests, sendRequests } = useSelector((state) => state.app);

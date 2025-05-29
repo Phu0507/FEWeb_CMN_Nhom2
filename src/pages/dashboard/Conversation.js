@@ -5,7 +5,6 @@ import { SimpleBarStyle } from "../../components/Scrollbar";
 import { keyframes } from "@mui/system";
 import { ChatHeader, ChatFooter } from "../../components/Chat";
 import useResponsive from "../../hooks/useResponsive";
-import { Download, ArrowCircleDown, DownloadSimple } from "phosphor-react";
 import {
   DocMsg,
   ImageMsg,
@@ -39,8 +38,7 @@ import {
   shouldShowTimestamp,
   getDateLabel,
 } from "../../contexts/ChatLogic";
-import Linkify from "linkify-react";
-import Lightbox from "react-image-lightbox";
+import ForwardMessage from "../../sections/dashboard/ForwardMessage";
 import "react-image-lightbox/style.css"; // Nhớ import CSS để Lightbox hoạt động
 
 const Conversation = ({ isMobile, menu }) => {
@@ -62,6 +60,17 @@ const Conversation = ({ isMobile, menu }) => {
 
   //   dispatch(SetCurrentConversation(current));
   // }, []);
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  const handleOpenDialog = (message) => {
+    setOpenDialog(true);
+    setSelectedMessage(message);
+  };
 
   const handleRecall = (messageId) => {
     dispatch(recallMessage(messageId));
@@ -141,272 +150,283 @@ const Conversation = ({ isMobile, menu }) => {
   }, [dispatch, room_id, current_conversation?.id]);
 
   return (
-    <Box p={isMobile ? 1 : 3}>
-      {current_messages &&
-        current_messages.map((m, i) => {
-          const messageDate = new Date(m.createdAt);
-          const label = getDateLabel(messageDate);
+    <>
+      <Box p={isMobile ? 1 : 3}>
+        {current_messages &&
+          current_messages.map((m, i) => {
+            const messageDate = new Date(m.createdAt);
+            const label = getDateLabel(messageDate);
 
-          const shouldShowDate = !shownDates.has(label); // chỉ hiển thị nếu chưa hiện label này
+            const shouldShowDate = !shownDates.has(label); // chỉ hiển thị nếu chưa hiện label này
 
-          if (shouldShowDate) shownDates.add(label);
+            if (shouldShowDate) shownDates.add(label);
 
-          return (
-            <React.Fragment key={m._id}>
-              {shouldShowDate && (
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      display: "inline-block",
-                      margin: "20px 0",
-                      fontSize: "14px",
-                      color: "white",
-                      backgroundColor: "gray",
-                      padding: "4px 10px",
-                      borderRadius: "20px",
-                    }}
-                  >
-                    {label}
-                  </div>
-                </div>
-              )}
-              <Stack
-                key={m._id}
-                direction="row"
-                spacing={0}
-                alignItems="flex-end"
-              >
-                {(isSameSender(current_messages, m, i, user_id) ||
-                  isLastMessage(current_messages, i, user_id)) && (
-                  <Avatar
-                    sx={{ cursor: "pointer", mr: 0.7 }}
-                    alt={m.sender.fullName}
-                    src={m.sender.avatar}
-                  />
-                )}
-
-                {/* Bọc span + menu trong div để kiểm soát hover */}
-                <div
-                  style={{
-                    maxWidth: "75%",
-                    marginLeft: isSameSenderMargin(
-                      current_messages,
-                      m,
-                      i,
-                      user_id
-                    ),
-                    marginTop: isSameUser(current_messages, m, i, user_id)
-                      ? 10
-                      : 15,
-                    // backgroundColor: "red",
-                    display: "flex",
-                    alignItems: "flex-end",
-                    flexDirection:
-                      m.sender._id === user_id ? "row" : "row-reverse", // thay đổi hướng sắp xếp
-                  }}
-                  onMouseEnter={() => setHoveredMsgId(m._id)}
-                  onMouseLeave={() => setHoveredMsgId(null)}
-                >
-                  {hoveredMsgId === m._id && (
+            return (
+              <React.Fragment key={m._id}>
+                {shouldShowDate && (
+                  <div style={{ textAlign: "center" }}>
                     <div
                       style={{
-                        display: "flex",
-                        gap: "6px",
-                        marginBottom: "6px",
-                        marginRight: "4px",
+                        display: "inline-block",
+                        margin: "20px 0",
+                        fontSize: "14px",
+                        color: "white",
+                        backgroundColor: "gray",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
                       }}
                     >
-                      <MessageOption
-                        message={m}
-                        user_id={user_id}
-                        onRecall={handleRecall}
-                        onForward={(msg) => console.log("Forwarding:", msg)}
-                        onEdit={handleEditMessage}
-                        onDelete={handDeleteMessageForMe}
-                        onDeleteForOther={handDeleteMessageOther}
-                      />
+                      {label}
                     </div>
+                  </div>
+                )}
+                <Stack
+                  key={m._id}
+                  direction="row"
+                  spacing={0}
+                  alignItems="flex-end"
+                >
+                  {(isSameSender(current_messages, m, i, user_id) ||
+                    isLastMessage(current_messages, i, user_id)) && (
+                    <Avatar
+                      sx={{ cursor: "pointer", mr: 0.7 }}
+                      alt={m.sender.fullName}
+                      src={m.sender.avatar}
+                    />
                   )}
 
-                  <Stack
-                    direction="column"
-                    spacing={0} // tương đương gap={0}
-                    alignItems="flex-start" // tương đương align="flex-start"
+                  {/* Bọc span + menu trong div để kiểm soát hover */}
+                  <div
+                    style={{
+                      maxWidth: "75%",
+                      marginLeft: isSameSenderMargin(
+                        current_messages,
+                        m,
+                        i,
+                        user_id
+                      ),
+                      marginTop: isSameUser(current_messages, m, i, user_id)
+                        ? 10
+                        : 15,
+                      // backgroundColor: "red",
+                      display: "flex",
+                      alignItems: "flex-end",
+                      flexDirection:
+                        m.sender._id === user_id ? "row" : "row-reverse", // thay đổi hướng sắp xếp
+                    }}
+                    onMouseEnter={() => setHoveredMsgId(m._id)}
+                    onMouseLeave={() => setHoveredMsgId(null)}
                   >
-                    <Box
-                      sx={{
-                        borderRadius: "5px",
-                        px: "10px",
-                        py: "5px",
-                        display: "inline-block",
-                        backgroundColor:
-                          m.sender._id === user_id
-                            ? theme.palette.primary.main
-                            : alpha(theme.palette.background.default, 1),
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
+                    {hoveredMsgId === m._id && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "6px",
+                          marginBottom: "6px",
+                          marginRight: "4px",
+                        }}
+                      >
+                        <MessageOption
+                          message={m}
+                          user_id={user_id}
+                          onRecall={handleRecall}
+                          onForward={handleOpenDialog}
+                          onEdit={handleEditMessage}
+                          onDelete={handDeleteMessageForMe}
+                          onDeleteForOther={handDeleteMessageOther}
+                        />
+                      </div>
+                    )}
+
+                    <Stack
+                      direction="column"
+                      spacing={0} // tương đương gap={0}
+                      alignItems="flex-start" // tương đương align="flex-start"
                     >
-                      {m.isRecalled ? (
-                        <em style={{ fontStyle: "italic", color: "#A0AEC0" }}>
-                          Tin nhắn đã thu hồi
-                        </em>
-                      ) : (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "6px",
-                          }}
-                        >
-                          {/* Text nếu có */}
-                          {editingMessage?._id === m._id ? (
-                            <>
-                              <input
-                                value={newContent}
-                                onChange={(e) => setNewContent(e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  padding: "8px",
-                                  borderRadius: "8px",
-                                  border: "1px solid #ccc",
-                                  fontSize: "14px",
-                                  backgroundColor: "white",
-                                }}
-                              />
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "flex-end",
-                                  gap: "8px",
-                                  marginTop: "5px",
-                                }}
-                              >
-                                <button
-                                  onClick={handleSaveEditedMessage}
+                      <Box
+                        sx={{
+                          borderRadius: "5px",
+                          px: "10px",
+                          py: "5px",
+                          display: "inline-block",
+                          backgroundColor:
+                            m.sender._id === user_id
+                              ? theme.palette.primary.main
+                              : alpha(theme.palette.background.default, 1),
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {m.isRecalled ? (
+                          <em style={{ fontStyle: "italic", color: "#A0AEC0" }}>
+                            Tin nhắn đã thu hồi
+                          </em>
+                        ) : (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "6px",
+                            }}
+                          >
+                            {/* Text nếu có */}
+                            {editingMessage?._id === m._id ? (
+                              <>
+                                <input
+                                  value={newContent}
+                                  onChange={(e) =>
+                                    setNewContent(e.target.value)
+                                  }
                                   style={{
-                                    backgroundColor: "#3182CE",
-                                    color: "white",
-                                    padding: "6px 12px",
-                                    borderRadius: "5px",
-                                    fontSize: "13px",
+                                    width: "100%",
+                                    padding: "8px",
+                                    borderRadius: "8px",
+                                    border: "1px solid #ccc",
+                                    fontSize: "14px",
+                                    backgroundColor: "white",
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: "8px",
+                                    marginTop: "5px",
                                   }}
                                 >
-                                  Lưu
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditingMessage(null);
-                                    setNewContent("");
-                                  }}
-                                  style={{
-                                    backgroundColor: "#e53e3e",
-                                    color: "white",
-                                    padding: "6px 12px",
-                                    borderRadius: "5px",
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  Hủy
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {/* {m.type === "text" && ( */}
-                              <TextMsg m={m} menu={menu} />
-                              {/* )} */}
-                              <style>
-                                {`
+                                  <button
+                                    onClick={handleSaveEditedMessage}
+                                    style={{
+                                      backgroundColor: "#3182CE",
+                                      color: "white",
+                                      padding: "6px 12px",
+                                      borderRadius: "5px",
+                                      fontSize: "13px",
+                                    }}
+                                  >
+                                    Lưu
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingMessage(null);
+                                      setNewContent("");
+                                    }}
+                                    style={{
+                                      backgroundColor: "#e53e3e",
+                                      color: "white",
+                                      padding: "6px 12px",
+                                      borderRadius: "5px",
+                                      fontSize: "13px",
+                                    }}
+                                  >
+                                    Hủy
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                {/* {m.type === "text" && ( */}
+                                <TextMsg m={m} menu={menu} />
+                                {/* )} */}
+                                <style>
+                                  {`
                                 .link-style {
                                     color: #3182ce;
                                     text-decoration: underline;
                                   }
                               `}
-                              </style>
-                              {m.isEdited && (
-                                <Typography
-                                  variant="body2"
-                                  fontSize="11px"
-                                  color={
-                                    m.sender._id === user_id
-                                      ? "#fff"
-                                      : theme.palette.text
-                                  }
-                                >
-                                  (Đã chỉnh sửa)
-                                </Typography>
-                              )}
-                            </>
-                          )}
+                                </style>
+                                {m.isEdited && (
+                                  <Typography
+                                    variant="body2"
+                                    fontSize="11px"
+                                    color={
+                                      m.sender._id === user_id
+                                        ? "#fff"
+                                        : theme.palette.text
+                                    }
+                                  >
+                                    (Đã chỉnh sửa)
+                                  </Typography>
+                                )}
+                              </>
+                            )}
 
-                          {/* Ảnh nếu là ảnh */}
-                          {m.type === "image" && m.fileUrl && (
-                            <>
-                              <ImageMsg
-                                m={m}
-                                menu={menu}
-                                imageMessages={imageMessages}
-                              />
-                            </>
-                          )}
+                            {/* Ảnh nếu là ảnh */}
+                            {m.type === "image" && m.fileUrl && (
+                              <>
+                                <ImageMsg
+                                  m={m}
+                                  menu={menu}
+                                  imageMessages={imageMessages}
+                                />
+                              </>
+                            )}
 
-                          {m.type === "video" && m.fileUrl && (
-                            <MediaMsg m={m} menu={menu} />
-                          )}
-                          {m.type === "audio" && m.fileUrl && (
-                            <AudioMsg m={m} menu={menu} />
-                          )}
-                          {/* File nếu là file đính kèm */}
-                          {m.type === "file" && m.fileUrl && (
-                            <DocMsg m={m} menu={menu} />
+                            {m.type === "video" && m.fileUrl && (
+                              <MediaMsg m={m} menu={menu} />
+                            )}
+                            {m.type === "audio" && m.fileUrl && (
+                              <AudioMsg m={m} menu={menu} />
+                            )}
+                            {/* File nếu là file đính kèm */}
+                            {m.type === "file" && m.fileUrl && (
+                              <DocMsg m={m} menu={menu} />
+                            )}
+                          </div>
+                        )}
+
+                        {/* Timeline nếu là tin nhắn đang được chọn */}
+                        {shouldShowTimestamp(current_messages, m, i) && (
+                          <Typography
+                            color={
+                              m.sender._id === user_id
+                                ? "#fff"
+                                : theme.palette.text
+                            }
+                            marginTop="5px"
+                            fontSize="12px"
+                            textAlign={
+                              m.sender._id === user_id ? "left" : "right"
+                            }
+                          >
+                            {new Date(m.createdAt).toLocaleTimeString("vi-VN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Typography>
+                        )}
+                      </Box>
+                      {(isSameSender(current_messages, m, i, user_id) ||
+                        isLastMessage(current_messages, i, user_id)) && (
+                        <div style={{ marginBottom: "-4px" }}>
+                          {m.chat.isGroupChat && (
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {m.sender.fullName}
+                            </span>
                           )}
                         </div>
                       )}
-
-                      {/* Timeline nếu là tin nhắn đang được chọn */}
-                      {shouldShowTimestamp(current_messages, m, i) && (
-                        <Typography
-                          color={
-                            m.sender._id === user_id
-                              ? "#fff"
-                              : theme.palette.text
-                          }
-                          marginTop="5px"
-                          fontSize="12px"
-                          textAlign={
-                            m.sender._id === user_id ? "left" : "right"
-                          }
-                        >
-                          {new Date(m.createdAt).toLocaleTimeString("vi-VN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </Typography>
-                      )}
-                    </Box>
-                    {(isSameSender(current_messages, m, i, user_id) ||
-                      isLastMessage(current_messages, i, user_id)) && (
-                      <div style={{ marginBottom: "-4px" }}>
-                        {m.chat.isGroupChat && (
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {m.sender.fullName}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </Stack>
-                </div>
-              </Stack>
-            </React.Fragment>
-          );
-        })}
-    </Box>
+                    </Stack>
+                  </div>
+                </Stack>
+              </React.Fragment>
+            );
+          })}
+      </Box>
+      {openDialog && (
+        <ForwardMessage
+          open={openDialog}
+          handleClose={handleCloseDialog}
+          message={selectedMessage}
+        />
+      )}
+    </>
   );
 };
 
@@ -420,7 +440,7 @@ const ChatComponent = () => {
   const { current_messages } = useSelector(
     (state) => state.conversation.direct_chat
   );
-  console.log("hien tai", current_messages);
+  // console.log("hien tai", current_messages);
   const [showNewMessagePanel, setShowNewMessagePanel] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);

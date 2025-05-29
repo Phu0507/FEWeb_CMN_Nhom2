@@ -554,6 +554,48 @@ export const editMessage = (messageId, newContent) => {
   };
 };
 
+export const forwardToFriend = (target, messageToForward) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      let chatIdToUse = target._id;
+
+      // Nếu không phải group (chat cá nhân), tạo chat mới với bạn
+      if (!target.isGroup) {
+        const resChat = await axios.post(
+          "/api/chat",
+          { userId: target._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        chatIdToUse = resChat.data._id;
+      }
+
+      // Gửi tin nhắn đến chatId (nhóm hoặc chat cá nhân)
+      const res = await axios.post(
+        "/api/message/forward",
+        {
+          messageId: messageToForward._id,
+          toChatId: chatIdToUse,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Nếu bạn có action hiển thị snackbar hoặc toggle fetch lại, gọi ở đây:
+      dispatch(
+        showSnackbar({ severity: "success", message: "Chuyển tiếp thành công" })
+      );
+    } catch (err) {
+      console.error("Chuyển tiếp lỗi:", err.message);
+      dispatch(
+        showSnackbar({ severity: "error", message: "Chuyển tiếp thất bại" })
+      );
+    } finally {
+    }
+  };
+};
+
 export const renameGroup = (newName, chatId) => {
   return async (dispatch, getState) => {
     try {
