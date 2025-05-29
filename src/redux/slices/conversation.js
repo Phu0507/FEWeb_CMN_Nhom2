@@ -42,7 +42,7 @@ const slice = createSlice({
             latestMessage: el.latestMessage,
           };
         } else {
-          const otherUser = el.users.find((u) => u._id.toString() !== user_id);
+          const otherUser = el.users?.find((u) => u._id.toString() !== user_id);
           const isOnline = onlineFriends.includes(otherUser?._id);
           return {
             id: el._id,
