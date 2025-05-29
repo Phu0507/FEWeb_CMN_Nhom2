@@ -313,22 +313,16 @@ const Chat_History = [
 
 const Message_options = [
   {
-    title: "Reply",
-  },
-  {
-    title: "React to message",
+    title: "Recall message",
   },
   {
     title: "Forward message",
   },
   {
-    title: "Star message",
+    title: "Edit message",
   },
   {
-    title: "Report",
-  },
-  {
-    title: "Delete Message",
+    title: "Delete message",
   },
 ];
 

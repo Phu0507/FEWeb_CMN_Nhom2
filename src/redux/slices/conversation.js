@@ -514,6 +514,23 @@ export const deleteMessage = (messageId) => {
   };
 };
 
+export const deleteMessageOther = (messageId) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+      await axios.put(
+        `http://localhost:5000/api/message/delete-for-receiver/${messageId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      dispatch(slice.actions.deleteMessageForMe(messageId));
+    } catch (err) {
+      alert(err.response?.data?.message || "Lỗi xóa tin nhắn");
+    }
+  };
+};
+
 export const editMessage = (messageId, newContent) => {
   return async (dispatch, getState) => {
     try {

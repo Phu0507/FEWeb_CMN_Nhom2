@@ -1,18 +1,18 @@
-import { Stack, Box, Typography, Avatar } from "@mui/material";
+import { Stack, Box, Typography, Avatar, Menu } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { SimpleBarStyle } from "../../components/Scrollbar";
-
+import { keyframes } from "@mui/system";
 import { ChatHeader, ChatFooter } from "../../components/Chat";
 import useResponsive from "../../hooks/useResponsive";
-import { Chat_History } from "../../data";
+import { Download, ArrowCircleDown, DownloadSimple } from "phosphor-react";
 import {
   DocMsg,
-  LinkMsg,
-  MediaMsg,
-  ReplyMsg,
+  ImageMsg,
   TextMsg,
-  Timeline,
+  MediaMsg,
+  AudioMsg,
+  MessageOption,
 } from "../../sections/dashboard/Conversation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -28,6 +28,7 @@ import {
   getConversationsFromServer,
   UpdateConversationLastMessage,
   UpdateConversationRecall,
+  deleteMessageOther,
 } from "../../redux/slices/conversation";
 import { socket } from "../../socket";
 import {
@@ -68,6 +69,10 @@ const Conversation = ({ isMobile, menu }) => {
 
   const handDeleteMessageForMe = (messageId) => {
     dispatch(deleteMessage(messageId));
+  };
+
+  const handDeleteMessageOther = (messageId) => {
+    dispatch(deleteMessageOther(messageId));
   };
 
   //new
@@ -137,52 +142,6 @@ const Conversation = ({ isMobile, menu }) => {
 
   return (
     <Box p={isMobile ? 1 : 3}>
-      {/* <Stack spacing={3}>
-        {current_messages.map((el, idx) => {
-          switch (el.type) {
-            case "divider":
-              return (
-                // Timeline
-                <Timeline el={el} />
-              );
-
-            case "msg":
-              switch (el.subtype) {
-                case "image":
-                  return (
-                    // Media Message
-                    <MediaMsg el={el} menu={menu} />
-                  );
-
-                case "doc":
-                  return (
-                    // Doc Message
-                    <DocMsg el={el} menu={menu} />
-                  );
-                case "Link":
-                  return (
-                    //  Link Message
-                    <LinkMsg el={el} menu={menu} />
-                  );
-
-                case "reply":
-                  return (
-                    //  ReplyMessage
-                    <ReplyMsg el={el} menu={menu} />
-                  );
-
-                default:
-                  return (
-                    // Text Message
-                    <TextMsg el={el} menu={menu} />
-                  );
-              }
-
-            default:
-              return <></>;
-          }
-        })}
-      </Stack> */}
       {current_messages &&
         current_messages.map((m, i) => {
           const messageDate = new Date(m.createdAt);
@@ -242,11 +201,13 @@ const Conversation = ({ isMobile, menu }) => {
                     // backgroundColor: "red",
                     display: "flex",
                     alignItems: "flex-end",
+                    flexDirection:
+                      m.sender._id === user_id ? "row" : "row-reverse", // thay đổi hướng sắp xếp
                   }}
                   onMouseEnter={() => setHoveredMsgId(m._id)}
                   onMouseLeave={() => setHoveredMsgId(null)}
                 >
-                  {hoveredMsgId === m._id && m.sender._id === user_id && (
+                  {hoveredMsgId === m._id && (
                     <div
                       style={{
                         display: "flex",
@@ -255,47 +216,18 @@ const Conversation = ({ isMobile, menu }) => {
                         marginRight: "4px",
                       }}
                     >
-                      <button
-                        onClick={() => handleRecall(m._id)}
-                        style={{
-                          fontSize: "12px",
-                          padding: "4px 6px",
-                          backgroundColor: "#a0aec0",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Thu hồi
-                      </button>
-                      <button
-                        onClick={() => handDeleteMessageForMe(m._id)}
-                        style={{
-                          fontSize: "12px",
-                          padding: "4px 6px",
-                          backgroundColor: "#fc8181",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Xóa
-                      </button>
-                      <button
-                        onClick={() => handleEditMessage(m)}
-                        style={{
-                          fontSize: "12px",
-                          padding: "4px 6px",
-                          backgroundColor: "#90cdf4",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Chỉnh sửa
-                      </button>
+                      <MessageOption
+                        message={m}
+                        user_id={user_id}
+                        onRecall={handleRecall}
+                        onForward={(msg) => console.log("Forwarding:", msg)}
+                        onEdit={handleEditMessage}
+                        onDelete={handDeleteMessageForMe}
+                        onDeleteForOther={handDeleteMessageOther}
+                      />
                     </div>
                   )}
+
                   <Stack
                     direction="column"
                     spacing={0} // tương đương gap={0}
@@ -381,25 +313,9 @@ const Conversation = ({ isMobile, menu }) => {
                             </>
                           ) : (
                             <>
-                              <Linkify
-                                options={{
-                                  target: "_blank",
-                                  rel: "noopener noreferrer",
-                                  className: "link-style",
-                                }}
-                              >
-                                <Typography
-                                  variant="body2"
-                                  color={
-                                    m.sender._id === user_id
-                                      ? "#fff"
-                                      : theme.palette.text
-                                  }
-                                >
-                                  {m.content}
-                                </Typography>
-                                {/* <TextMsg m={m} menu={menu} /> */}
-                              </Linkify>
+                              {/* {m.type === "text" && ( */}
+                              <TextMsg m={m} menu={menu} />
+                              {/* )} */}
                               <style>
                                 {`
                                 .link-style {
@@ -427,148 +343,24 @@ const Conversation = ({ isMobile, menu }) => {
                           {/* Ảnh nếu là ảnh */}
                           {m.type === "image" && m.fileUrl && (
                             <>
-                              <img
-                                src={m.fileUrl}
-                                onClick={() => {
-                                  const index = imageMessages.findIndex(
-                                    (img) => img._id === m._id
-                                  );
-                                  setPhotoIndex(index);
-                                  setTimeout(() => {
-                                    setIsOpen(true);
-                                  }, 0);
-                                }}
-                                style={{
-                                  maxWidth: "500px",
-                                  width: "100%",
-                                  height: "250px",
-                                  objectFit: "cover",
-                                  borderRadius: "5px",
-                                  cursor: "pointer",
-                                }}
+                              <ImageMsg
+                                m={m}
+                                menu={menu}
+                                imageMessages={imageMessages}
                               />
-
-                              {/* Nút tải ảnh */}
-                              <div
-                                style={{
-                                  textAlign:
-                                    m.sender._id === user_id ? "left" : "right",
-                                }}
-                              >
-                                <a
-                                  href={m.fileUrl}
-                                  download
-                                  style={{
-                                    color: "#3182CE",
-                                    textDecoration: "underline",
-                                    cursor: "pointer",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {/* <RiDownload2Line size={20} /> */}
-                                </a>
-                              </div>
-
-                              {/* Lightbox */}
-                              {isOpen && (
-                                <Lightbox
-                                  mainSrc={imageMessages[photoIndex].fileUrl}
-                                  nextSrc={
-                                    photoIndex < imageMessages.length - 1
-                                      ? imageMessages[photoIndex + 1].fileUrl
-                                      : undefined
-                                  }
-                                  prevSrc={
-                                    photoIndex > 0
-                                      ? imageMessages[photoIndex - 1].fileUrl
-                                      : undefined
-                                  }
-                                  onCloseRequest={() => setIsOpen(false)}
-                                  onMovePrevRequest={() =>
-                                    photoIndex > 0 &&
-                                    setPhotoIndex(photoIndex - 1)
-                                  }
-                                  onMoveNextRequest={() =>
-                                    photoIndex < imageMessages.length - 1 &&
-                                    setPhotoIndex(photoIndex + 1)
-                                  }
-                                  imageTitle={`Ảnh từ nhóm: ${imageMessages[photoIndex].chat.chatName}`}
-                                  imageCaption={`Gửi bởi: ${imageMessages[photoIndex].sender.fullName}`}
-                                />
-                              )}
                             </>
                           )}
 
                           {m.type === "video" && m.fileUrl && (
-                            <video
-                              controls
-                              style={{
-                                maxWidth: "400px",
-                                width: "100%",
-                                height: "500px",
-                                objectFit: "cover",
-                              }}
-                            >
-                              <source src={m.fileUrl} type="video/mp4" />
-                              Trình duyệt của bạn không hỗ trợ video.
-                            </video>
+                            <MediaMsg m={m} menu={menu} />
                           )}
                           {m.type === "audio" && m.fileUrl && (
-                            <audio controls src={m.fileUrl}>
-                              Trình duyệt không hỗ trợ phát âm thanh.
-                            </audio>
+                            <AudioMsg m={m} menu={menu} />
                           )}
                           {/* File nếu là file đính kèm */}
-                          {m.type === "file" &&
-                            m.fileUrl &&
-                            (() => {
-                              const fileName = decodeURIComponent(
-                                m.fileUrl.split("/").pop()
-                              );
-                              const extension = fileName
-                                .split(".")
-                                .pop()
-                                .toLowerCase();
-                              const fileIcons = {
-                                pdf: "📄",
-                                doc: "📄",
-                                docx: "📄",
-                                xls: "📊",
-                                xlsx: "📊",
-                                ppt: "📽️",
-                                pptx: "📽️",
-                                rar: "🗜️",
-                                zip: "🗜️",
-                                txt: "📄",
-                                mp3: "🎵",
-                                mp4: "🎞️",
-                                default: "📎",
-                              };
-                              const icon =
-                                fileIcons[extension] || fileIcons.default;
-
-                              return (
-                                <a
-                                  href={m.fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  style={{
-                                    color: "#3182CE",
-                                    textDecoration: "underline",
-                                    fontSize: "14px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                  }}
-                                >
-                                  <span style={{ fontSize: "18px" }}>
-                                    {icon}
-                                  </span>
-                                  {fileName}
-                                </a>
-                              );
-                            })()}
+                          {m.type === "file" && m.fileUrl && (
+                            <DocMsg m={m} menu={menu} />
+                          )}
                         </div>
                       )}
 
@@ -621,50 +413,122 @@ const Conversation = ({ isMobile, menu }) => {
 const ChatComponent = () => {
   const isMobile = useResponsive("between", "md", "xs", "sm");
   const theme = useTheme();
+  const { user_id } = useSelector((state) => state.auth);
 
   const messageListRef = useRef(null);
 
   const { current_messages } = useSelector(
     (state) => state.conversation.direct_chat
   );
+  console.log("hien tai", current_messages);
+  const [showNewMessagePanel, setShowNewMessagePanel] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
-    // Scroll to the bottom of the message list when new messages are added
-    messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-  }, [current_messages]);
+    if (!current_messages || current_messages.length === 0) return;
+
+    const el = messageListRef.current;
+
+    if (initialLoad) {
+      // Lần đầu mở, scroll xuống đáy luôn
+      el.scrollTop = el.scrollHeight;
+      setInitialLoad(false);
+      return;
+    }
+
+    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    const lastMessage = current_messages[current_messages.length - 1];
+    const isSentByMe = lastMessage.sender._id === user_id;
+
+    if (isBottom || isSentByMe) {
+      el.scrollTop = el.scrollHeight;
+      setShowNewMessagePanel(false);
+    } else {
+      setShowNewMessagePanel(true);
+    }
+  }, [current_messages, user_id, initialLoad]);
+
+  const { room_id } = useSelector((state) => state.app);
+  useEffect(() => {
+    setInitialLoad(true);
+  }, [room_id]); // Hoặc roomid
+
+  const floatUpDown = keyframes`
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+`;
 
   return (
-    <Stack
-      height={"100%"}
-      maxHeight={"100vh"}
-      width={isMobile ? "100vw" : "auto"}
-    >
-      {/*  */}
-      <ChatHeader />
-      <Box
-        ref={messageListRef}
-        width={"100%"}
-        sx={{
-          position: "relative",
-          flexGrow: 1,
-          overflow: "scroll",
-
-          backgroundColor:
-            theme.palette.mode === "light"
-              ? "#F0F4FA"
-              : theme.palette.background,
-
-          boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
-        }}
+    <>
+      <Stack
+        height={"100%"}
+        maxHeight={"100vh"}
+        width={isMobile ? "100vw" : "auto"}
       >
-        <SimpleBarStyle timeout={500} clickOnTrack={false}>
-          <Conversation menu={true} isMobile={isMobile} />
-        </SimpleBarStyle>
-      </Box>
+        {/*  */}
+        <ChatHeader />
+        <Box
+          onScroll={() => {
+            const el = messageListRef.current;
+            const isBottom =
+              el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+            setIsAtBottom(isBottom);
+            if (isBottom) setShowNewMessagePanel(false);
+          }}
+          ref={messageListRef}
+          width={"100%"}
+          sx={{
+            position: "relative",
+            flexGrow: 1,
+            overflow: "scroll",
 
-      {/*  */}
-      <ChatFooter />
-    </Stack>
+            backgroundColor:
+              theme.palette.mode === "light"
+                ? "#F0F4FA"
+                : theme.palette.background,
+
+            boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
+          }}
+        >
+          <SimpleBarStyle timeout={500} clickOnTrack={false}>
+            <Conversation menu={true} isMobile={isMobile} />
+          </SimpleBarStyle>
+        </Box>
+
+        {/*  */}
+        <ChatFooter />
+      </Stack>
+      {showNewMessagePanel && (
+        <Box
+          onClick={() => {
+            const el = messageListRef.current;
+            el.scrollTop = el.scrollHeight;
+            setShowNewMessagePanel(false);
+          }}
+          sx={{
+            position: "absolute",
+            bottom: 120,
+            right: 40,
+            backgroundColor: "#1976d2",
+            color: "#fff",
+            px: 2,
+            py: 1,
+            borderRadius: "20px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            cursor: "pointer",
+            zIndex: 9999,
+            animation: `${floatUpDown} 1.2s ease-in-out infinite`,
+          }}
+        >
+          Tin nhắn mới
+        </Box>
+      )}
+    </>
   );
 };
 
