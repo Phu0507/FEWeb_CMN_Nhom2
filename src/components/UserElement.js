@@ -29,6 +29,7 @@ import {
   AddSendRequest,
   RemoveFriends,
   AddFriend,
+  SetRoomUrl,
 } from "../redux/slices/app";
 import { accessChat } from "../redux/slices/conversation";
 import axios from "../utils/axios";
@@ -313,27 +314,27 @@ const FriendRequestElement = ({
 const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.app);
-  const [roomUrl, setRoomUrl] = useState(null);
+  const { user, roomUrl } = useSelector((state) => state.app);
+  // const [roomUrl, setRoomUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const token = useSelector((state) => state.auth.token);
-  useEffect(() => {
-    if (!socket) return;
+  // useEffect(() => {
+  //   if (!socket) return;
 
-    socket.on("incomingVideoCall", ({ from, roomUrl }) => {
-      const accept = window.confirm(
-        `${from.fullName} đang gọi cho bạn. Trả lời?`
-      );
-      if (accept) {
-        const fullUrl = `${roomUrl}?userName=${encodeURIComponent(
-          user.fullName || "Guest"
-        )}`;
-        setRoomUrl(fullUrl);
-      }
-    });
+  //   socket.on("incomingVideoCall", ({ from, roomUrl }) => {
+  //     const accept = window.confirm(
+  //       `${from.fullName} đang gọi cho bạn. Trả lời?`
+  //     );
+  //     if (accept) {
+  //       const fullUrl = `${roomUrl}?userName=${encodeURIComponent(
+  //         user.fullName || "Guest"
+  //       )}`;
+  //       setRoomUrl(fullUrl);
+  //     }
+  //   });
 
-    return () => socket.off("incomingVideoCall");
-  }, [user]);
+  //   return () => socket.off("incomingVideoCall");
+  // }, [user]);
 
   const handleCall = async (friendId) => {
     try {
@@ -362,7 +363,7 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
       const fullUrl = `${url}?userName=${encodeURIComponent(
         user.fullName || "Guest"
       )}`;
-      setRoomUrl(fullUrl);
+      dispatch(SetRoomUrl(fullUrl));
     } catch (err) {
       console.error("Không thể tạo phòng:", err);
       alert("Không thể bắt đầu cuộc gọi");
@@ -370,23 +371,6 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
       setLoading(false);
     }
   };
-
-  if (roomUrl) {
-    return (
-      <div>
-        <h2>Đang gọi video...</h2>
-        <iframe
-          src={roomUrl}
-          title="Daily Video Call"
-          allow="camera; microphone; fullscreen; autoplay"
-          style={{ width: "100%", height: "600px", border: "none" }}
-        />
-        <button onClick={() => setRoomUrl(null)} style={{ marginTop: 10 }}>
-          Kết thúc cuộc gọi
-        </button>
-      </div>
-    );
-  }
 
   return (
     <StyledChatBox

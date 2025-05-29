@@ -17,6 +17,7 @@ import {
   FetchFriends,
   FetchUsers,
   FetchSendRequests,
+  SetRoomUrl,
 } from "../../redux/slices/app";
 import {
   FriendElement,
@@ -117,11 +118,29 @@ const FriendsList = () => {
   const dispatch = useDispatch();
 
   const { friends } = useSelector((state) => state.app);
-
+  const { user, roomUrl } = useSelector((state) => state.app);
   useEffect(() => {
     dispatch(FetchFriends());
   }, [dispatch]);
-
+  if (roomUrl) {
+    return (
+      <div>
+        <h2>Đang gọi video...</h2>
+        <iframe
+          src={roomUrl}
+          title="Daily Video Call"
+          allow="camera; microphone; fullscreen; autoplay"
+          style={{ width: "100%", height: "600px", border: "none" }}
+        />
+        <button
+          onClick={() => dispatch(SetRoomUrl(null))}
+          style={{ marginTop: 10 }}
+        >
+          Kết thúc cuộc gọi
+        </button>
+      </div>
+    );
+  }
   return (
     <>
       {friends?.length > 0 ? (

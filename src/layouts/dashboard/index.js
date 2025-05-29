@@ -14,6 +14,7 @@ import {
   RemoveFriend,
   RemoveSendRequest,
   FetchFriends,
+  SetRoomUrl,
 } from "../../redux/slices/app";
 import { socket, connectSocket } from "../../socket";
 import {
@@ -21,6 +22,9 @@ import {
   AddDirectConversation,
   AddDirectMessage,
   getConversationsFromServer,
+  SetOnlineFriends,
+  AddOnlineFriend,
+  RemoveOnlineFriend,
 } from "../../redux/slices/conversation";
 import AudioCallNotification from "../../sections/dashboard/Audio/CallNotification";
 import VideoCallNotification from "../../sections/dashboard/video/CallNotification";
@@ -50,6 +54,7 @@ const DashboardLayout = () => {
     (state) => state.conversation.direct_chat
   );
   const { room_id } = useSelector((state) => state.app);
+  const { user } = useSelector((state) => state.app);
   useEffect(() => {
     dispatch(FetchUserProfile());
     dispatch(FetchFriends());
@@ -77,7 +82,7 @@ const DashboardLayout = () => {
       // }
 
       socket.emit("setup", user_id);
-      // socket.emit("joinChat", room_id);
+
       socket.on("friendRequestReceived", (data) => {
         // Gọi lại API để lấy danh sách friendRequests mới
         console.log("hi", data);
@@ -140,7 +145,35 @@ const DashboardLayout = () => {
         //   })
         // );
       });
+
+      socket.on("incomingVideoCall", ({ from, roomUrl }) => {
+        const accept = window.confirm(
+          `${from.fullName} đang gọi cho bạn. Trả lời?`
+        );
+        if (accept) {
+          const fullUrl = `${roomUrl}?userName=${encodeURIComponent(
+            user.fullName || "Guest"
+          )}`;
+          dispatch(SetRoomUrl(fullUrl));
+        }
+      });
     }
+    if (user_id) {
+      socket.emit("getOnlineFriends", user_id);
+    }
+
+    socket.on("initialOnlineFriends", ({ userIds }) => {
+      console.log("Danh sách bạn bè online ban đầu:", userIds);
+      dispatch(SetOnlineFriends(userIds));
+    });
+    socket.on("friendOnline", ({ userId: friendId }) => {
+      console.log("Bạn bè online:", friendId);
+      dispatch(AddOnlineFriend(friendId)); // bạn sẽ tạo action này
+    });
+    socket.on("friendOffline", ({ userId: friendId }) => {
+      console.log("Bạn bè offline:", friendId);
+      dispatch(RemoveOnlineFriend(friendId)); // bạn sẽ tạo action này
+    });
 
     // Remove event listener on component unmount
     return () => {
@@ -151,8 +184,12 @@ const DashboardLayout = () => {
       socket.off("newMessageToUser");
       socket.off("friendRequestRejected");
       socket.off("messageReceived");
+      socket.off("initialOnlineFriends");
+      socket.off("friendOnline");
+      socket.off("friendOffline");
+      socket.off("incomingVideoCall");
     };
-  }, [isLoggedIn, dispatch, user_id]);
+  }, [isLoggedIn, dispatch, user_id, user]);
 
   if (!isLoggedIn) {
     return <Navigate to={"/auth/login"} />;

@@ -26,6 +26,7 @@ const initialState = {
   isLoading: false,
   keyWord: "",
   recentSearches: [], // Thêm dòng này
+  roomUrl: null,
 };
 
 const slice = createSlice({
@@ -125,6 +126,9 @@ const slice = createSlice({
         state.recentSearches.pop();
       }
     },
+    setRoomUrl: (state, action) => {
+      state.roomUrl = action.payload;
+    },
   },
 });
 
@@ -196,6 +200,11 @@ export function RemoveFriendRequest(senderId) {
 export function RemoveFriend(friendId) {
   return (dispatch) => {
     dispatch(slice.actions.removeFriends({ friendId }));
+  };
+}
+export function SetRoomUrl(url) {
+  return async (dispatch, getState) => {
+    dispatch(slice.actions.setRoomUrl(url));
   };
 }
 

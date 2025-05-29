@@ -14,6 +14,7 @@ const initialState = {
     current_conversation: null,
     current_messages: [],
     fetchAgain: false, // thêm dòng này
+    onlineFriends: [],
   },
 };
 
@@ -23,7 +24,7 @@ const slice = createSlice({
   reducers: {
     fetchDirectConversations(state, action) {
       const user_id = localStorage.getItem("user_id");
-
+      const onlineFriends = state.direct_chat.onlineFriends;
       const list = action.payload.conversations.map((el) => {
         const isGroup = el.isGroupChat;
         const latestMessage = el.latestMessage;
@@ -42,11 +43,12 @@ const slice = createSlice({
           };
         } else {
           const otherUser = el.users.find((u) => u._id.toString() !== user_id);
+          const isOnline = onlineFriends.includes(otherUser?._id);
           return {
             id: el._id,
             user_id: otherUser?._id,
             name: otherUser?.fullName,
-            online: otherUser?.status === "online",
+            online: isOnline,
             img: otherUser?.avatar,
             time: msgTime,
             unread: 0,
@@ -242,6 +244,36 @@ const slice = createSlice({
         conversation.latestMessage.isRecalled = true;
       }
     },
+    setOnlineFriends(state, action) {
+      state.direct_chat.onlineFriends = action.payload;
+    },
+    addOnlineFriend(state, action) {
+      if (!state.direct_chat.onlineFriends.includes(action.payload)) {
+        state.direct_chat.onlineFriends.push(action.payload);
+      }
+
+      // cập nhật trạng thái online của hội thoại
+      const conversation = state.direct_chat.conversations.find(
+        (conv) => conv.user_id === action.payload && !conv.isGroup
+      );
+      if (conversation) {
+        conversation.online = true;
+      }
+    },
+
+    removeOnlineFriend(state, action) {
+      state.direct_chat.onlineFriends = state.direct_chat.onlineFriends.filter(
+        (id) => id !== action.payload
+      );
+
+      // cập nhật trạng thái offline của hội thoại
+      const conversation = state.direct_chat.conversations.find(
+        (conv) => conv.user_id === action.payload && !conv.isGroup
+      );
+      if (conversation) {
+        conversation.online = false;
+      }
+    },
   },
 });
 
@@ -283,6 +315,44 @@ export const AddDirectMessage = (message) => {
     dispatch(slice.actions.addDirectMessage({ message }));
   };
 };
+
+export const SetOnlineFriends = (userIds) => {
+  return (dispatch, getState) => {
+    // 1. Cập nhật danh sách bạn bè online
+    dispatch(slice.actions.setOnlineFriends(userIds));
+
+    // 2. Lấy danh sách hội thoại hiện tại
+    const currentConversations =
+      getState().conversation.direct_chat.conversations;
+
+    // 3. Cập nhật trạng thái online cho từng hội thoại
+    const updatedConversations = currentConversations.map((conv) => {
+      if (!conv.isGroup) {
+        return {
+          ...conv,
+          online: userIds.includes(conv.user_id),
+        };
+      }
+      return conv;
+    });
+
+    // 4. Cập nhật lại danh sách hội thoại
+    dispatch(
+      slice.actions.fetchDirectConversations({
+        conversations: updatedConversations,
+      })
+    );
+  };
+};
+
+export const AddOnlineFriend = (friendId) => (dispatch) => {
+  dispatch(slice.actions.addOnlineFriend(friendId));
+};
+
+export const RemoveOnlineFriend = (friendId) => (dispatch) => {
+  dispatch(slice.actions.removeOnlineFriend(friendId));
+};
+
 // new export
 export const RecallDirectMessage = (messageId) => {
   return (dispatch) => {
