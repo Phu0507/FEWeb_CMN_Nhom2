@@ -49,7 +49,7 @@ const DashboardLayout = () => {
   const { conversations, current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
   );
-
+  const { room_id } = useSelector((state) => state.app);
   useEffect(() => {
     dispatch(FetchUserProfile());
     dispatch(FetchFriends());
@@ -77,6 +77,7 @@ const DashboardLayout = () => {
       // }
 
       socket.emit("setup", user_id);
+      // socket.emit("joinChat", room_id);
       socket.on("friendRequestReceived", (data) => {
         // Gọi lại API để lấy danh sách friendRequests mới
         console.log("hi", data);
@@ -90,7 +91,7 @@ const DashboardLayout = () => {
         dispatch(
           showSnackbar({
             severity: "success",
-            message: `${data.sender.fullName} just sent you a friend request.`,
+            message: `${data.sender.fullName} gửi lời mời kết bạn.`,
           })
         );
       });
@@ -111,10 +112,10 @@ const DashboardLayout = () => {
         dispatch(RemoveSendRequest(receiverId));
       });
 
-      socket.on("friendRequestAccepted", ({ receiver }) => {
-        console.log("Đã được người này chấp nhận kết bạn: ", receiver);
+      socket.on("friendRequestAccepted", ({ sender, receiver }) => {
+        const friendToAdd = user_id === receiver._id ? sender : receiver;
         dispatch(RemoveSendRequest(receiver._id));
-        dispatch(AddFriend(receiver));
+        dispatch(AddFriend(friendToAdd));
         dispatch(
           showSnackbar({
             severity: "success",
@@ -132,12 +133,12 @@ const DashboardLayout = () => {
       socket.on("newMessageToUser", ({ chatId, message }) => {
         console.log("Tin nhắn mới đến:", message);
         dispatch(getConversationsFromServer());
-        dispatch(
-          showSnackbar({
-            severity: "success",
-            message: `có tin nhắn mới là: ${message.content} từ ${message.sender.fullName}`,
-          })
-        );
+        // dispatch(
+        //   showSnackbar({
+        //     severity: "success",
+        //     message: `có tin nhắn mới là: ${message.content} từ ${message.sender.fullName}`,
+        //   })
+        // );
       });
     }
 
@@ -149,6 +150,7 @@ const DashboardLayout = () => {
       socket.off("youWereRemoved");
       socket.off("newMessageToUser");
       socket.off("friendRequestRejected");
+      socket.off("messageReceived");
     };
   }, [isLoggedIn, dispatch, user_id]);
 

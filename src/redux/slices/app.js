@@ -214,7 +214,7 @@ export function FetchUsers(keyWord) {
         }
       )
       .then((response) => {
-        console.log("users", response.data);
+        // console.log("users", response.data);
         dispatch(slice.actions.updateUsers({ users: response.data }));
         // dispatch(
         //   slice.actions.addRecentSearch({
@@ -267,7 +267,7 @@ export function FetchFriends() {
         }
       )
       .then((response) => {
-        console.log("friends", response.data);
+        // console.log("friends", response.data);
         dispatch(slice.actions.updateFriends({ friends: response.data }));
         dispatch(slice.actions.setLoading({ isLoading: false }));
       })
@@ -336,7 +336,7 @@ export function FetchFriendRequests() {
         }
       )
       .then((response) => {
-        console.log(response.data);
+        // console.log(response.data);
         dispatch(
           slice.actions.updateFriendRequests({ requests: response.data })
         );
@@ -361,7 +361,7 @@ export function FetchSendRequests() {
         }
       )
       .then((response) => {
-        console.log("data có", response.data);
+        // console.log("data có", response.data);
         const receivers = response.data.map((request) => request.receiver);
         dispatch(slice.actions.updateSendRequests({ requests: receivers }));
       })
@@ -407,7 +407,6 @@ export const FetchUserProfile = () => {
         },
       })
       .then((response) => {
-        console.log(response);
         dispatch(slice.actions.fetchUser({ user: response.data.data }));
       })
       .catch((err) => {

@@ -229,7 +229,9 @@ const ChatElement = ({ img, name, time, unread, online, id, isGroup }) => {
 
                   if (isRecall) {
                     return truncateText(
-                      `${isMine ? "Bạn: " : ""}[Đã thu hồi tin nhắn]`,
+                      `${
+                        isMine ? "Bạn: " : sender?.fullName + ": "
+                      }[Đã thu hồi tin nhắn]`,
                       20
                     );
                   }

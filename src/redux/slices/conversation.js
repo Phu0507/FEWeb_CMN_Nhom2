@@ -52,6 +52,7 @@ const slice = createSlice({
             unread: 0,
             latestMessage: el.latestMessage,
             email: otherUser?.email,
+            isGroup: el.isGroupChat,
           };
         }
       });
@@ -357,7 +358,7 @@ export const getConversationsFromServer = () => {
       });
 
       const conversations = response.data; // server trả về mảng conversations
-      console.log("ý", conversations);
+      // console.log("ý", conversations);
       dispatch(FetchDirectConversations({ conversations }));
     } catch (error) {
       console.error("Lỗi khi fetch conversations:", error);
@@ -378,7 +379,7 @@ export const getCurrentMessagesFromServer = (conversationId) => {
       });
 
       const messages = response.data;
-      console.log("message", response.data); // server trả về mảng messages
+      // console.log("message", response.data); // server trả về mảng messages
       dispatch(FetchCurrentMessages({ messages }));
     } catch (error) {
       console.error("Lỗi khi fetch current messages:", error);
@@ -561,9 +562,10 @@ export const forwardToFriend = (target, messageToForward) => {
       const token = state.auth.token;
 
       let chatIdToUse = target._id;
-
       // Nếu không phải group (chat cá nhân), tạo chat mới với bạn
-      if (!target.isGroup) {
+      console.log("ô", target.isGroup);
+      console.log("id", target._id);
+      if (typeof target?.isGroup === "undefined") {
         const resChat = await axios.post(
           "/api/chat",
           { userId: target._id },
@@ -586,6 +588,7 @@ export const forwardToFriend = (target, messageToForward) => {
       dispatch(
         showSnackbar({ severity: "success", message: "Chuyển tiếp thành công" })
       );
+      dispatch(ToggleFetchAgain());
     } catch (err) {
       console.error("Chuyển tiếp lỗi:", err.message);
       dispatch(

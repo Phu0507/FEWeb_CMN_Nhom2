@@ -15,12 +15,6 @@ import {
 import { styled, useTheme } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  FetchFriendRequests,
-  FetchFriends,
-  FetchUsers,
-  FetchSendRequests,
-} from "../../redux/slices/app";
-import {
   ChatElement,
   GroupChatElement,
   FriendElement,
@@ -37,7 +31,7 @@ const ChatList = ({ message }) => {
   const { conversations } = useSelector(
     (state) => state.conversation.direct_chat
   );
-  //   console.log("ê ý ê", conversations);
+  console.log("ê ý ê", conversations);
   return (
     <Stack spacing={2}>
       <TextField

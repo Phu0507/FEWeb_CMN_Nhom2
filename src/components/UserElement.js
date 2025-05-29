@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Badge,
@@ -15,6 +15,7 @@ import {
   UserCircleMinus,
   CheckCircle,
   X,
+  VideoCamera,
 } from "phosphor-react";
 import { socket } from "../socket";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,6 +31,7 @@ import {
   AddFriend,
 } from "../redux/slices/app";
 import { accessChat } from "../redux/slices/conversation";
+import axios from "../utils/axios";
 const user_id = window.localStorage.getItem("user_id");
 
 const StyledChatBox = styled(Box)(({ theme }) => ({
@@ -176,13 +178,13 @@ const UserElement = ({ avatar, fullName, online, _id }) => {
             <Button
               onClick={() => {
                 dispatch(AcceptRequest(_id, user_id));
-                dispatch(
-                  AddFriend({
-                    _id,
-                    fullName,
-                    avatar,
-                  })
-                );
+                // dispatch(
+                //   AddFriend({
+                //     _id,
+                //     fullName,
+                //     avatar,
+                //   })
+                // );
               }}
               variant="contained"
             >
@@ -288,13 +290,13 @@ const FriendRequestElement = ({
             color="success"
             onClick={() => {
               dispatch(AcceptRequest(_id, user_id));
-              dispatch(
-                AddFriend({
-                  _id,
-                  fullName,
-                  avatar,
-                })
-              );
+              // dispatch(
+              //   AddFriend({
+              //     _id,
+              //     fullName,
+              //     avatar,
+              //   })
+              // );
             }}
             variant="contained"
           >
@@ -311,6 +313,81 @@ const FriendRequestElement = ({
 const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.app);
+  const [roomUrl, setRoomUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const token = useSelector((state) => state.auth.token);
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("incomingVideoCall", ({ from, roomUrl }) => {
+      const accept = window.confirm(
+        `${from.fullName} đang gọi cho bạn. Trả lời?`
+      );
+      if (accept) {
+        const fullUrl = `${roomUrl}?userName=${encodeURIComponent(
+          user.fullName || "Guest"
+        )}`;
+        setRoomUrl(fullUrl);
+      }
+    });
+
+    return () => socket.off("incomingVideoCall");
+  }, [user]);
+
+  const handleCall = async (friendId) => {
+    try {
+      setLoading(true);
+      const res = await axios.post(
+        "http://localhost:5000/api/daily/create-room",
+        {
+          conversationId: friendId,
+          toUserId: friendId,
+          fromUser: {
+            _id: user._id,
+            fullName: user.fullName,
+            avatar: user.avatar || "",
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const { url } = res.data;
+      if (!url) return alert("Không nhận được URL phòng");
+
+      const fullUrl = `${url}?userName=${encodeURIComponent(
+        user.fullName || "Guest"
+      )}`;
+      setRoomUrl(fullUrl);
+    } catch (err) {
+      console.error("Không thể tạo phòng:", err);
+      alert("Không thể bắt đầu cuộc gọi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (roomUrl) {
+    return (
+      <div>
+        <h2>Đang gọi video...</h2>
+        <iframe
+          src={roomUrl}
+          title="Daily Video Call"
+          allow="camera; microphone; fullscreen; autoplay"
+          style={{ width: "100%", height: "600px", border: "none" }}
+        />
+        <button onClick={() => setRoomUrl(null)} style={{ marginTop: 10 }}>
+          Kết thúc cuộc gọi
+        </button>
+      </div>
+    );
+  }
+
   return (
     <StyledChatBox
       sx={{
@@ -353,6 +430,13 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
             variant="contained"
           >
             <Chat />
+          </IconButton>
+          <IconButton
+            color="success"
+            variant="contained"
+            onClick={() => handleCall(_id)}
+          >
+            <VideoCamera />
           </IconButton>
           <IconButton
             onClick={() => {

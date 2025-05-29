@@ -221,9 +221,9 @@ const Conversation = ({ isMobile, menu }) => {
                       <div
                         style={{
                           display: "flex",
-                          gap: "6px",
-                          marginBottom: "6px",
-                          marginRight: "4px",
+                          gap: "1px",
+                          marginBottom: "1px",
+                          marginRight: "1px",
                         }}
                       >
                         <MessageOption

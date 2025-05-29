@@ -9,30 +9,10 @@ import {
   Button,
 } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
-import {
-  Chat,
-  UserMinus,
-  UserCircleMinus,
-  CheckCircle,
-  X,
-} from "phosphor-react";
 import { forwardToFriend } from "../redux/slices/conversation";
 import { socket } from "../socket";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  showSnackbar,
-  AcceptRequest,
-  FetchSendRequests,
-  RemoveSendRequest,
-  FetchFriendRequests,
-  RemoveFriendRequest,
-  AddSendRequest,
-  RemoveFriends,
-  AddFriend,
-} from "../redux/slices/app";
 import GroupAvatar from "../contexts/GroupAvatar";
-import { accessChat } from "../redux/slices/conversation";
-const user_id = window.localStorage.getItem("user_id");
 
 const StyledChatBox = styled(Box)(({ theme }) => ({
   "&:hover": {
@@ -121,9 +101,20 @@ const ChatElement = ({ img, name, isGroup, id, user_id, message }) => {
   );
 };
 
-const GroupChatElement = ({ img, name, isGroup, id, user_id }) => {
+const GroupChatElement = ({ img, name, isGroup, id, user_id, message }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+
+  const handleForward = () => {
+    const target = {
+      _id: id,
+      isGroup,
+    };
+    console.log("gửi msss", message);
+    if (!message) return;
+
+    dispatch(forwardToFriend(target, message));
+  };
 
   return (
     <StyledChatBox
@@ -153,7 +144,9 @@ const GroupChatElement = ({ img, name, isGroup, id, user_id }) => {
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          <Button variant="contained">Send</Button>
+          <Button variant="contained" onClick={handleForward}>
+            Send
+          </Button>
         </Stack>
       </Stack>
     </StyledChatBox>
@@ -162,9 +155,20 @@ const GroupChatElement = ({ img, name, isGroup, id, user_id }) => {
 
 // FriendElement
 
-const FriendElement = ({ avatar, fullName, online, _id }) => {
+const FriendElement = ({ avatar, fullName, online, _id, message, isGroup }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+
+  const handleForward = () => {
+    const target = {
+      _id: _id,
+      isGroup,
+    };
+    console.log("gửi id", _id);
+    if (!message) return;
+
+    dispatch(forwardToFriend(target, message));
+  };
   return (
     <StyledChatBox
       sx={{
@@ -189,7 +193,9 @@ const FriendElement = ({ avatar, fullName, online, _id }) => {
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          <Button variant="contained">Send</Button>
+          <Button variant="contained" onClick={handleForward}>
+            Send
+          </Button>
         </Stack>
       </Stack>
     </StyledChatBox>
