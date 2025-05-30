@@ -31,11 +31,16 @@ const ChatList = ({ message }) => {
   const { conversations } = useSelector(
     (state) => state.conversation.direct_chat
   );
-  console.log("ê ý ê", conversations);
+
+  // Lọc các đoạn chat dựa theo search
+  const filteredConversations = conversations.filter((conversation) =>
+    conversation.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <Stack spacing={2}>
       <TextField
-        label="Tìm kiếm người dùng"
+        label="Tìm kiếm đoạn chat"
         variant="outlined"
         size="small"
         value={search}
@@ -43,9 +48,13 @@ const ChatList = ({ message }) => {
       />
       <Stack spacing={1}>
         <p>Đoạn chat gần đây:</p>
-        {conversations.map((user, idx) => (
-          <ChatElement key={idx} {...user} message={message} />
-        ))}
+        {filteredConversations.length > 0 ? (
+          filteredConversations.map((user, idx) => (
+            <ChatElement key={idx} {...user} message={message} />
+          ))
+        ) : (
+          <p></p>
+        )}
       </Stack>
     </Stack>
   );
@@ -55,27 +64,31 @@ const FriendsList = ({ message }) => {
   const dispatch = useDispatch();
   const [search, setSearch] = useState("");
   const { friends } = useSelector((state) => state.app);
+
+  // Lọc bạn bè theo tên (giả sử mỗi friend có trường `name`)
+  const filteredFriends = friends?.filter((friend) =>
+    friend.fullName?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <>
-      <Stack spacing={2}>
-        <TextField
-          label="Tìm kiếm bạn bè"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Stack spacing={1}>
-          {friends?.length > 0 ? (
-            friends.map((el, idx) => (
-              <FriendElement key={idx} {...el} message={message} />
-            ))
-          ) : (
-            <div>Bạn chưa có bạn bè nào.</div>
-          )}
-        </Stack>
+    <Stack spacing={2}>
+      <TextField
+        label="Tìm kiếm bạn bè"
+        variant="outlined"
+        size="small"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <Stack spacing={1}>
+        {filteredFriends?.length > 0 ? (
+          filteredFriends.map((el, idx) => (
+            <FriendElement key={idx} {...el} message={message} />
+          ))
+        ) : (
+          <div>Không tìm thấy bạn bè nào phù hợp.</div>
+        )}
       </Stack>
-    </>
+    </Stack>
   );
 };
 
@@ -86,7 +99,13 @@ const GroupsList = ({ message }) => {
   const { conversations } = useSelector(
     (state) => state.conversation.direct_chat
   );
-  //   console.log("ê ý ê", conversations);
+
+  // Lọc nhóm chat theo search
+  const filteredGroups = conversations
+    .filter((conver) => conver.isGroup)
+    .filter((group) => group.name?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <Stack spacing={2}>
       <TextField
@@ -98,12 +117,13 @@ const GroupsList = ({ message }) => {
       />
       <Stack spacing={1}>
         <p>Nhóm chat:</p>
-        {conversations
-          .filter((conver) => conver.isGroup)
-          .sort((a, b) => a.name.localeCompare(b.name)) // Sắp xếp theo tên
-          .map((user, idx) => (
+        {filteredGroups.length > 0 ? (
+          filteredGroups.map((user, idx) => (
             <GroupChatElement key={idx} {...user} message={message} />
-          ))}
+          ))
+        ) : (
+          <p></p>
+        )}
       </Stack>
     </Stack>
   );
