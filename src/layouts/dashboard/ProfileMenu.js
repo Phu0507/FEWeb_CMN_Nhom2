@@ -75,7 +75,7 @@ const ProfileMenu = () => {
                     } else if (idx === 1) {
                       handleOpenDialog();
                     } else if (idx === 2) {
-                      navigate("/settings");
+                      // navigate("/settings");
                     } else {
                       dispatch(LogoutUser());
                       socket.emit("end", { user_id });

@@ -35,7 +35,14 @@ const BottomNav = () => {
       >
         {Nav_Buttons.map((el) => {
           return el.index === selectedTab ? (
-            <Box sx={{ backgroundColor: theme.palette.primary.main, borderRadius: 1.5 }} p={1}>
+            <Box
+              key={el.index}
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                borderRadius: 1.5,
+              }}
+              p={1}
+            >
               <IconButton sx={{ width: "max-content", color: "#ffffff" }}>
                 {el.icon}
               </IconButton>

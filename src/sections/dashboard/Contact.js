@@ -349,15 +349,15 @@ const Contact = () => {
             <AntSwitch />
           </Stack>
           <Divider />
-          <Typography variant="body2">1 group in common</Typography>
+          <Typography variant="body2">Group in common</Typography>
           <Stack direction="row" alignItems={"center"} spacing={2}>
-            <Avatar src={faker.image.imageUrl()} alt={faker.name.fullName()} />
+            {/* <Avatar src={faker.image.imageUrl()} alt={faker.name.fullName()} />
             <Stack direction="column" spacing={0.5}>
               <Typography variant="subtitle2">Camel’s Gang</Typography>
               <Typography variant="caption">
                 Owl, Parrot, Rabbit , You
               </Typography>
-            </Stack>
+            </Stack> */}
           </Stack>
           <Divider />
           <Stack direction="row" alignItems={"center"} spacing={2}>
