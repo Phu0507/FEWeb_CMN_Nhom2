@@ -191,23 +191,25 @@ const DashboardLayout = () => {
       socket.on("incomingVideoCall", ({ from, roomUrl }) => {
         setIncomingCall({ from, roomUrl });
       });
-    }
-    if (user_id) {
-      socket.emit("getOnlineFriends", user_id);
+
+      if (user_id) {
+        socket.emit("getOnlineFriends", user_id);
+      }
+
+      socket.on("initialOnlineFriends", ({ userIds }) => {
+        console.log("Danh sách bạn bè online ban đầu:", userIds);
+        dispatch(SetOnlineFriends(userIds));
+      });
+      socket.on("friendOnline", ({ userId: friendId }) => {
+        console.log("Bạn bè online:", friendId);
+        dispatch(AddOnlineFriend(friendId)); // bạn sẽ tạo action này
+      });
+      socket.on("friendOffline", ({ userId: friendId }) => {
+        console.log("Bạn bè offline:", friendId);
+        dispatch(RemoveOnlineFriend(friendId)); // bạn sẽ tạo action này
+      });
     }
 
-    socket.on("initialOnlineFriends", ({ userIds }) => {
-      console.log("Danh sách bạn bè online ban đầu:", userIds);
-      dispatch(SetOnlineFriends(userIds));
-    });
-    socket.on("friendOnline", ({ userId: friendId }) => {
-      console.log("Bạn bè online:", friendId);
-      dispatch(AddOnlineFriend(friendId)); // bạn sẽ tạo action này
-    });
-    socket.on("friendOffline", ({ userId: friendId }) => {
-      console.log("Bạn bè offline:", friendId);
-      dispatch(RemoveOnlineFriend(friendId)); // bạn sẽ tạo action này
-    });
     // Remove event listener on component unmount
     return () => {
       socket?.off("friendRequestReceived");
