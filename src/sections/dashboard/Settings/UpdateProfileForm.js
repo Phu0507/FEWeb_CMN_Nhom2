@@ -39,7 +39,12 @@ const UpdateProfileForm = ({ setShowRightPane }) => {
       .oneOf(["male", "female"], "Vui lòng chọn giới tính")
       .required("Vui lòng chọn giới tính"),
 
-    phoneNumber: Yup.string().required("Hãy cập nhật số điện thoại"),
+    phoneNumber: Yup.string()
+      .required("Hãy cập nhật số điện thoại")
+      .matches(
+        /^0\d{9,}$/,
+        "Số điện thoại không hợp lệ (bắt đầu bằng 0 và ít nhất 10 chữ số)"
+      ),
   });
 
   const formatDate = (date) => {
