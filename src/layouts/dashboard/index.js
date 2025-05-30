@@ -98,7 +98,7 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && user_id) {
       // window.onload = function () {
       //   if (!window.location.hash) {
       //     window.location = window.location + "#loaded";
