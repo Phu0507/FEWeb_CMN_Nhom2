@@ -304,7 +304,7 @@ const Conversation = ({ isMobile, menu }) => {
                                       fontSize: "13px",
                                     }}
                                   >
-                                    Lưu
+                                    Save
                                   </button>
                                   <button
                                     onClick={() => {
@@ -319,7 +319,7 @@ const Conversation = ({ isMobile, menu }) => {
                                       fontSize: "13px",
                                     }}
                                   >
-                                    Hủy
+                                    Cancel
                                   </button>
                                 </div>
                               </>
