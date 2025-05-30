@@ -117,7 +117,7 @@ const UsersList = () => {
   );
 };
 
-const FriendsList = () => {
+const FriendsList = ({ onCloseDialog }) => {
   const dispatch = useDispatch();
 
   const { friends } = useSelector((state) => state.app);
@@ -129,7 +129,9 @@ const FriendsList = () => {
   return (
     <>
       {friends?.length > 0 ? (
-        friends.map((el, idx) => <FriendElement key={idx} {...el} />)
+        friends.map((el, idx) => (
+          <FriendElement key={idx} {...el} onCloseDialog={onCloseDialog} />
+        ))
       ) : (
         <div>Bạn chưa có bạn bè nào.</div>
       )}
@@ -216,7 +218,7 @@ const Friends = ({ open, handleClose }) => {
                   return <UsersList />;
 
                 case 1: // display friends in this list
-                  return <FriendsList />;
+                  return <FriendsList onCloseDialog={handleClose} />;
 
                 case 2: // display request in this list
                   return <RequestsList />;

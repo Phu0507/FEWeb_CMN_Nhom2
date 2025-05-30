@@ -311,7 +311,15 @@ const FriendRequestElement = ({
 
 // FriendElement
 
-const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
+const FriendElement = ({
+  avatar,
+  fullName,
+  incoming,
+  missed,
+  online,
+  _id,
+  onCloseDialog,
+}) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { user, roomUrl } = useSelector((state) => state.app);
@@ -409,6 +417,7 @@ const FriendElement = ({ avatar, fullName, incoming, missed, online, _id }) => {
           <IconButton
             onClick={() => {
               dispatch(accessChat(_id));
+              if (onCloseDialog) onCloseDialog();
             }}
             color="secondary"
             variant="contained"
