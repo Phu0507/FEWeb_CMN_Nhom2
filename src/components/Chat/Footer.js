@@ -76,6 +76,7 @@ const ChatInput = ({
   value,
   inputRef,
   onActionClick,
+  onKeyDown,
 }) => {
   const [openActions, setOpenActions] = React.useState(false);
 
@@ -83,6 +84,7 @@ const ChatInput = ({
     <StyledInput
       inputRef={inputRef}
       value={value}
+      onKeyDown={onKeyDown}
       onChange={(event) => {
         setValue(event.target.value);
       }}
@@ -252,6 +254,12 @@ const Footer = () => {
               setValue={setValue}
               openPicker={openPicker}
               setOpenPicker={setOpenPicker}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               onActionClick={(title) => {
                 if (title === "Image") {
                   imageInputRef.current?.click();
