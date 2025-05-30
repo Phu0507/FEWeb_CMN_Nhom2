@@ -10,9 +10,6 @@ import {
   CircularProgress,
   Badge,
   Box,
-  DialogTitle,
-  DialogActions,
-  Button,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -20,7 +17,6 @@ import {
   FetchFriends,
   FetchUsers,
   FetchSendRequests,
-  SetRoomUrl,
 } from "../../redux/slices/app";
 import {
   FriendElement,
