@@ -23,18 +23,19 @@ export default function AuthLoginForm() {
 
   const LoginSchema = Yup.object().shape({
     email: Yup.string()
-      .required("Email is required")
-      .email("Email must be a valid email address"),
-    password: Yup.string().required("Password is required"),
+      .required("Vui lòng nhập email")
+      .email("Email không đúng định dạng"),
+    password: Yup.string().required("Mật khẩu không được để trống"),
   });
 
   const defaultValues = {
-    email: "demo@tawk.com",
-    password: "demo1234",
+    email: "",
+    password: "",
   };
 
   const methods = useForm({
     resolver: yupResolver(LoginSchema),
+    mode: "onBlur",
   });
 
   const {

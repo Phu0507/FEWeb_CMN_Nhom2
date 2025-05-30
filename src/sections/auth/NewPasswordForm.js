@@ -31,11 +31,12 @@ export default function NewPasswordForm() {
 
   const VerifyCodeSchema = Yup.object().shape({
     password: Yup.string()
-      .min(8, "Password must be at least 8 characters")
-      .required("Password is required"),
+      .min(8, "Mật khẩu phải có ít nhất 8 kí tự")
+      .required("Mật khẩu không được để không")
+      .matches(/^\S*$/, "Mật khẩu không được chứa khoảng trắng"),
     passwordConfirm: Yup.string()
-      .required("Confirm password is required")
-      .oneOf([Yup.ref("password"), null], "Passwords must match"),
+      .required("Xác nhận lại mật khẩu")
+      .oneOf([Yup.ref("password"), null], "Mật khẩu không khớp"),
   });
 
   const defaultValues = {
@@ -44,7 +45,7 @@ export default function NewPasswordForm() {
   };
 
   const methods = useForm({
-    mode: "onChange",
+    mode: "onBlur",
     resolver: yupResolver(VerifyCodeSchema),
     defaultValues,
   });

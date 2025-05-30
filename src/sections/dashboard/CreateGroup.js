@@ -41,13 +41,13 @@ const CreateGroupForm = ({ handleClose }) => {
   const dispatch = useDispatch();
   const NewGroupSchema = Yup.object().shape({
     title: Yup.string()
-      .required("Title is required")
-      .min(3, "Title must be at least 3 characters")
+      .required("Nhập tên nhóm")
+      .min(3, "Tên nhóm ít nhất 3 kí tự")
       .matches(
         /^(?!\s)(?!.*\s$).{3,}$/,
-        "Title must not start or end with a space"
+        "Tên nhóm không bắt đầu hoặc kết thúc bằng khoảng trống"
       ),
-    members: Yup.array().min(2, "Must have at least 2 members"),
+    members: Yup.array().min(2, "Phải chọn ít nhất 2 người"),
   });
 
   const defaultValues = {

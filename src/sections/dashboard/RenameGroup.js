@@ -26,7 +26,8 @@ const RenameGroupForm = ({ handleClose, groupName, onRename, chatId }) => {
     newName: Yup.string()
       .trim("Không được chứa khoảng trắng đầu hoặc cuối")
       .strict(true)
-      .required("Tên nhóm không được để trống"),
+      .required("Tên nhóm không được để trống")
+      .min(3, "Tên nhóm phải ít nhất 3 ký tự"),
   });
 
   const defaultValues = {

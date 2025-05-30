@@ -46,7 +46,7 @@ export default function VerifyForm() {
   };
 
   const methods = useForm({
-    mode: "onChange",
+    mode: "onBlur",
     resolver: yupResolver(VerifyCodeSchema),
     defaultValues,
   });

@@ -37,7 +37,8 @@ const ChangePasswordForm = ({ handleClose }) => {
 
     newPassword: Yup.string()
       .required("Vui lòng nhập mật khẩu mới")
-      .min(8, "Mật khẩu mới phải có ít nhất 8 ký tự"),
+      .min(8, "Mật khẩu mới phải có ít nhất 8 ký tự")
+      .matches(/^\S*$/, "Mật khẩu không được chứa khoảng trắng"),
 
     confirmNewPassword: Yup.string()
       .required("Vui lòng xác nhận mật khẩu mới")

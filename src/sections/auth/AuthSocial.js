@@ -1,6 +1,11 @@
 // @mui
 import { Divider, IconButton, Stack } from "@mui/material";
-import { GithubLogo, GoogleLogo, TwitterLogo } from "phosphor-react";
+import {
+  GithubLogo,
+  GoogleLogo,
+  TwitterLogo,
+  FacebookLogo,
+} from "phosphor-react";
 
 // ----------------------------------------------------------------------
 
@@ -31,12 +36,12 @@ export default function AuthSocial() {
           <GoogleLogo color="#DF3E30" />
         </IconButton>
 
-        <IconButton color="inherit" onClick={handleGithubLogin}>
+        {/* <IconButton color="inherit" onClick={handleGithubLogin}>
           <GithubLogo />
-        </IconButton>
+        </IconButton> */}
 
         <IconButton onClick={handleTwitterLogin}>
-          <TwitterLogo color="#1C9CEA" />
+          <FacebookLogo color="#1C9CEA" />
         </IconButton>
       </Stack>
     </div>

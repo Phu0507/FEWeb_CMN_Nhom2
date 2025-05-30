@@ -19,13 +19,14 @@ export default function AuthResetPasswordForm({ mode }) {
 
   const ResetPasswordSchema = Yup.object().shape({
     email: Yup.string()
-      .required("Email is required")
-      .email("Email must be a valid email address"),
+      .required("Vui lòng nhập email")
+      .email("Email không đúng định dạng"),
   });
 
   const methods = useForm({
     resolver: yupResolver(ResetPasswordSchema),
     defaultValues: { email: "" },
+    mode: "onBlur",
   });
 
   const { handleSubmit } = methods;
