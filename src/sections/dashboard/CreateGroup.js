@@ -85,6 +85,7 @@ const CreateGroupForm = ({ handleClose }) => {
         <RHFAutocomplete
           name="members"
           label="Members"
+          disableCloseOnSelect
           multiple
           options={friends}
           ChipProps={{ size: "medium" }}
