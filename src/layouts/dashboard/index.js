@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Stack } from "@mui/material";
 import { Navigate, Outlet } from "react-router-dom";
 import useResponsive from "../../hooks/useResponsive";
@@ -39,6 +39,17 @@ import {
   UpdateVideoCallDialog,
 } from "../../redux/slices/videoCall";
 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Avatar,
+  Box,
+} from "@mui/material";
+
 const DashboardLayout = () => {
   const isDesktop = useResponsive("up", "md");
   const dispatch = useDispatch();
@@ -54,7 +65,26 @@ const DashboardLayout = () => {
     (state) => state.conversation.direct_chat
   );
   const { room_id } = useSelector((state) => state.app);
-  const { user } = useSelector((state) => state.app);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [countdown, setCountdown] = useState(30);
+  const { user, roomUrl } = useSelector((state) => state.app);
+  useEffect(() => {
+    if (incomingCall) {
+      setCountdown(30);
+      const intervalId = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            setIncomingCall(null);
+            clearInterval(intervalId);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [incomingCall]);
   useEffect(() => {
     dispatch(FetchUserProfile());
     dispatch(FetchFriends());
@@ -146,16 +176,20 @@ const DashboardLayout = () => {
         // );
       });
 
+      // socket.on("incomingVideoCall", ({ from, roomUrl }) => {
+      //   const accept = window.confirm(
+      //     `${from.fullName} đang gọi cho bạn. Trả lời?`
+      //   );
+      //   if (accept) {
+      //     const fullUrl = `${roomUrl}?userName=${encodeURIComponent(
+      //       user.fullName || "Guest"
+      //     )}`;
+      //     dispatch(SetRoomUrl(fullUrl));
+      //   }
+      // });
+
       socket.on("incomingVideoCall", ({ from, roomUrl }) => {
-        const accept = window.confirm(
-          `${from.fullName} đang gọi cho bạn. Trả lời?`
-        );
-        if (accept) {
-          const fullUrl = `${roomUrl}?userName=${encodeURIComponent(
-            user.fullName || "Guest"
-          )}`;
-          dispatch(SetRoomUrl(fullUrl));
-        }
+        setIncomingCall({ from, roomUrl });
       });
     }
     if (user_id) {
@@ -174,7 +208,6 @@ const DashboardLayout = () => {
       console.log("Bạn bè offline:", friendId);
       dispatch(RemoveOnlineFriend(friendId)); // bạn sẽ tạo action này
     });
-
     // Remove event listener on component unmount
     return () => {
       socket?.off("friendRequestReceived");
@@ -194,7 +227,16 @@ const DashboardLayout = () => {
   if (!isLoggedIn) {
     return <Navigate to={"/auth/login"} />;
   }
-
+  const handleAcceptCall = () => {
+    const fullUrl = `${incomingCall.roomUrl}?userName=${encodeURIComponent(
+      user.fullName || "Guest"
+    )}`;
+    dispatch(SetRoomUrl(fullUrl));
+    setIncomingCall(null);
+  };
+  const handleEndCall = () => {
+    dispatch(SetRoomUrl(null));
+  };
   return (
     <>
       <Stack direction="row">
@@ -223,6 +265,77 @@ const DashboardLayout = () => {
           handleClose={handleCloseVideoDialog}
         />
       )}
+      {/* Phần còn lại của giao diện chat (ChatHeader, ChatFooter, ...) */}
+
+      {/* Dialog gọi đến */}
+      <Dialog
+        open={Boolean(incomingCall)}
+        onClose={() => setIncomingCall(null)}
+      >
+        <DialogTitle>Cuộc gọi đến</DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 1 }}>
+            <Avatar
+              src={incomingCall?.from.avatar}
+              alt={incomingCall?.from.fullName}
+              sx={{ width: 56, height: 56 }}
+            />
+            <Typography>
+              <strong>{incomingCall?.from.fullName}</strong> đang gọi cho bạn.
+              Bạn có muốn trả lời không?
+            </Typography>
+          </Stack>
+          <Typography
+            variant="h6"
+            sx={{
+              mt: 2,
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+          >
+            Tự động từ chối sau{" "}
+            <Box component="span" sx={{ color: "red" }}>
+              {countdown}
+            </Box>{" "}
+            giây...
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIncomingCall(null)} color="error">
+            Từ chối
+          </Button>
+          <Button
+            onClick={handleAcceptCall}
+            variant="contained"
+            color="primary"
+          >
+            Trả lời
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog gọi video nếu có roomUrl */}
+      <Dialog
+        open={Boolean(roomUrl)}
+        onClose={handleEndCall}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Đang gọi video...</DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <iframe
+            src={roomUrl}
+            title="Daily Video Call"
+            allow="camera; microphone; fullscreen; autoplay"
+            style={{ width: "100%", height: "500px", border: "none" }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEndCall} color="error" variant="contained">
+            Kết thúc cuộc gọi
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
