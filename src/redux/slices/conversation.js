@@ -40,6 +40,7 @@ const slice = createSlice({
             isGroup: el.isGroupChat,
             groupAdmin: el.groupAdmin?._id,
             latestMessage: el.latestMessage,
+            groupAvatar: el.groupAvatar,
           };
         } else {
           const otherUser = el.users?.find((u) => u._id.toString() !== user_id);
@@ -151,6 +152,32 @@ const slice = createSlice({
             : msg
         );
     },
+    updateOrPrependGroupChat: (state, action) => {
+      const chat = action.payload;
+
+      const latestMessage = chat.latestMessage;
+      const msgTime = latestMessage?.createdAt || "";
+
+      const converted = {
+        id: chat._id,
+        user_id: chat.users,
+        name: chat.chatName,
+        time: msgTime,
+        unread: 0,
+        isGroup: true,
+        groupAdmin: chat.groupAdmin?._id,
+        latestMessage: chat.latestMessage,
+        groupAvatar: chat.groupAvatar,
+      };
+
+      // Xoá bản cũ nếu đã tồn tại
+      const filtered = state.direct_chat.conversations.filter(
+        (c) => c.id !== converted.id
+      );
+
+      // Đưa bản mới lên đầu
+      state.direct_chat.conversations = [converted, ...filtered];
+    },
 
     //new
     toggleFetchAgain(state) {
@@ -227,7 +254,7 @@ const slice = createSlice({
       const conversation = state.direct_chat.conversations.find(
         (conv) => conv.latestMessage?._id === messageId
       );
-      console.log("tin nhắn cuối", conversation.latestMessage.content);
+      // console.log("tin nhắn cuối", conversation.latestMessage?.content);
       if (conversation) {
         conversation.latestMessage.content = newContent;
         conversation.latestMessage.isEdited = true;
@@ -281,6 +308,11 @@ const slice = createSlice({
 export default slice.reducer;
 
 // ----------------------------------------------------------------------
+export const UpdateOrPrependGroupChat = (chat) => {
+  return async (dispatch, getState) => {
+    dispatch(slice.actions.updateOrPrependGroupChat(chat));
+  };
+};
 
 export const FetchDirectConversations = ({ conversations }) => {
   return async (dispatch, getState) => {
@@ -428,7 +460,7 @@ export const getConversationsFromServer = () => {
       });
 
       const conversations = response.data; // server trả về mảng conversations
-      // console.log("ý", conversations);
+      console.log("ý", conversations);
       dispatch(FetchDirectConversations({ conversations }));
     } catch (error) {
       console.error("Lỗi khi fetch conversations:", error);
@@ -686,7 +718,7 @@ export const renameGroup = (newName, chatId) => {
       // console.log("Response from API:", response.data);
 
       // dispatch(SetCurrentConversation(response.data));
-      dispatch(ToggleFetchAgain());
+      // dispatch(ToggleFetchAgain());
       socket.emit("group:updated", response.data);
     } catch (error) {
       dispatch(
@@ -747,7 +779,7 @@ export const removeGroupMember = (chatId, userId) => {
 
       // console.log("Member removed:", response.data);
       socket.emit("group:updated", response.data);
-      dispatch(ToggleFetchAgain());
+      // dispatch(ToggleFetchAgain());
     } catch (error) {
       console.error("Lỗi khi xóa thành viên:", error);
     }
@@ -853,7 +885,7 @@ export const addUsersToGroup = (chatId, selectedUsers) => {
 
       const { data } = await axios.put("/api/chat/groupadd", payload, config);
       socket.emit("group:updated", data);
-      dispatch(ToggleFetchAgain());
+      // dispatch(ToggleFetchAgain());
     } catch (err) {
       console.error("Lỗi khi thêm:", err);
       throw err; // Nếu muốn component xử lý lỗi tiếp
@@ -873,6 +905,7 @@ export const transformChatToConversation = (chat) => {
     isGroup: chat.isGroupChat,
     groupAdmin: chat.groupAdmin?._id,
     latestMessage: chat.latestMessage || null,
+    groupAvatar: chat.groupAvatar,
   };
 };
 
@@ -892,5 +925,42 @@ export const transformDirectChat = (chat) => {
     isGroup: false,
     email: otherUser?.email,
     latestMessage: chat.latestMessage || null,
+  };
+};
+
+export const updateGroupAvatar = (chatId, file) => {
+  return async (dispatch, getState) => {
+    try {
+      const state = getState();
+      const token = state.auth.token;
+
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      formData.append("avatar", file);
+      formData.append("chatId", chatId);
+
+      const response = await axios.put(
+        "http://localhost:5000/api/chat/group/avatar",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Phát sự kiện socket thông báo nhóm đã được cập nhật
+      socket.emit("group:updated", response.data);
+    } catch (error) {
+      dispatch(
+        showSnackbar({
+          severity: "error",
+          message:
+            error.response?.data?.message ||
+            "Có lỗi xảy ra khi cập nhật avatar nhóm",
+        })
+      );
+    }
   };
 };

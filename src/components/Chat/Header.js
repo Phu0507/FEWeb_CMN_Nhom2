@@ -223,7 +223,15 @@ const ChatHeader = () => {
               sx={{ cursor: "pointer" }}
             >
               {current_conversation?.isGroup ? (
-                <GroupAvatar members={current_conversation?.user_id} />
+                current_conversation?.groupAvatar ? (
+                  <Avatar
+                    alt={current_conversation?.name}
+                    src={current_conversation.groupAvatar}
+                    sx={{ width: 42, height: 42 }}
+                  />
+                ) : (
+                  <GroupAvatar members={current_conversation?.user_id} />
+                )
               ) : current_conversation?.online ? (
                 <StyledBadge
                   overlap="circular"

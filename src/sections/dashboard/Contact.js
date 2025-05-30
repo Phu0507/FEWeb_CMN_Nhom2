@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { faker } from "@faker-js/faker";
+import { Camera } from "phosphor-react";
 import {
   Bell,
   CaretRight,
@@ -31,6 +32,7 @@ import useResponsive from "../../hooks/useResponsive";
 import AntSwitch from "../../components/AntSwitch";
 import { useDispatch, useSelector } from "react-redux";
 import { ToggleSidebar, UpdateSidebarType } from "../../redux/slices/app";
+import { updateGroupAvatar } from "../../redux/slices/conversation";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -115,6 +117,12 @@ const Contact = () => {
       if (latest3Media.length === 3) break;
     }
   }
+  const handleChangeAvatar = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    dispatch(updateGroupAvatar(current_conversation.id, file));
+  };
 
   return (
     <Box sx={{ width: !isDesktop ? "100vw" : 320, maxHeight: "100vh" }}>
@@ -157,11 +165,44 @@ const Contact = () => {
           spacing={3}
         >
           <Stack alignItems="center" direction="row" spacing={2}>
-            <Avatar
-              src={current_conversation?.img}
-              alt={current_conversation?.name}
-              sx={{ height: 64, width: 64 }}
-            />
+            <Box position="relative">
+              <Avatar
+                src={
+                  current_conversation?.isGroup
+                    ? current_conversation?.groupAvatar
+                    : current_conversation?.img
+                }
+                alt={current_conversation?.name}
+                sx={{ height: 64, width: 64 }}
+              />
+              {current_conversation?.isGroup && (
+                <IconButton
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    bgcolor: "background.paper",
+                    border: "1px solid #ccc",
+                  }}
+                  onClick={() => {
+                    // Gọi hàm mở modal hoặc input để đổi ảnh
+                    document.getElementById("upload-group-avatar").click();
+                  }}
+                >
+                  <Camera fontSize="small" />
+                </IconButton>
+              )}
+              {/* Hidden file input */}
+              <input
+                id="upload-group-avatar"
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleChangeAvatar}
+              />
+            </Box>
+
             <Stack spacing={0.5}>
               <Typography variant="article" fontWeight={600}>
                 {current_conversation?.name}
@@ -173,6 +214,7 @@ const Contact = () => {
               )}
             </Stack>
           </Stack>
+
           <Stack
             direction="row"
             alignItems="center"

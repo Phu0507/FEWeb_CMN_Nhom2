@@ -56,7 +56,16 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
   },
 }));
 
-const ChatElement = ({ img, name, time, unread, online, id, isGroup }) => {
+const ChatElement = ({
+  img,
+  name,
+  time,
+  unread,
+  online,
+  id,
+  isGroup,
+  groupAvatar,
+}) => {
   const dispatch = useDispatch();
   const [relativeTime, setRelativeTime] = useState("");
   useEffect(() => {
@@ -154,7 +163,15 @@ const ChatElement = ({ img, name, time, unread, online, id, isGroup }) => {
       >
         <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
           {isGroup ? (
-            <GroupAvatar members={conversation.user_id} />
+            conversation.groupAvatar && conversation.groupAvatar !== "" ? (
+              <Avatar
+                alt={name}
+                src={conversation.groupAvatar}
+                sx={{ width: 42, height: 42 }}
+              />
+            ) : (
+              <GroupAvatar members={conversation.user_id} />
+            )
           ) : online ? (
             <StyledBadge
               overlap="circular"

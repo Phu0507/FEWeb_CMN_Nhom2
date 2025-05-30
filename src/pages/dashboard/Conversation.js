@@ -434,84 +434,92 @@ const ChatComponent = () => {
   const isMobile = useResponsive("between", "md", "xs", "sm");
   const theme = useTheme();
   const { user_id } = useSelector((state) => state.auth);
-
-  const messageListRef = useRef(null);
-
   const { current_messages } = useSelector(
     (state) => state.conversation.direct_chat
   );
-  // console.log("hien tai", current_messages);
+  const { room_id } = useSelector((state) => state.app);
+
+  const messageListRef = useRef(null);
   const [showNewMessagePanel, setShowNewMessagePanel] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
 
+  const scrollToBottom = () => {
+    const el = messageListRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  };
+
+  const checkIfAtBottom = () => {
+    const el = messageListRef.current;
+    if (!el) return false;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  };
+
+  // Xử lý scroll đến đáy hoặc hiển thị panel tin nhắn mới
   useEffect(() => {
     if (!current_messages || current_messages.length === 0) return;
 
     const el = messageListRef.current;
+    if (!el) return;
 
     if (initialLoad) {
-      // Lần đầu mở, scroll xuống đáy luôn
-      el.scrollTop = el.scrollHeight;
+      scrollToBottom();
       setInitialLoad(false);
       return;
     }
 
-    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    const isBottom = checkIfAtBottom();
     const lastMessage = current_messages[current_messages.length - 1];
-    const isSentByMe = lastMessage.sender._id === user_id;
+    const isSentByMe = lastMessage?.sender?._id === user_id;
 
     if (isBottom || isSentByMe) {
-      el.scrollTop = el.scrollHeight;
+      scrollToBottom();
       setShowNewMessagePanel(false);
     } else {
       setShowNewMessagePanel(true);
     }
   }, [current_messages, user_id, initialLoad]);
 
-  const { room_id } = useSelector((state) => state.app);
+  // Khi chuyển phòng chat
   useEffect(() => {
     setInitialLoad(true);
-  }, [room_id]); // Hoặc roomid
+  }, [room_id]);
 
   const floatUpDown = keyframes`
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-`;
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  `;
+
+  const handleScroll = () => {
+    const atBottom = checkIfAtBottom();
+    setIsAtBottom(atBottom);
+    if (atBottom) {
+      setShowNewMessagePanel(false);
+    }
+  };
 
   return (
     <>
       <Stack
-        height={"100%"}
-        maxHeight={"100vh"}
+        height="100%"
+        maxHeight="100vh"
         width={isMobile ? "100vw" : "auto"}
       >
-        {/*  */}
         <ChatHeader />
         <Box
-          onScroll={() => {
-            const el = messageListRef.current;
-            const isBottom =
-              el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-            setIsAtBottom(isBottom);
-            if (isBottom) setShowNewMessagePanel(false);
-          }}
+          onScroll={handleScroll}
           ref={messageListRef}
-          width={"100%"}
+          width="100%"
           sx={{
             position: "relative",
             flexGrow: 1,
             overflow: "scroll",
-
             backgroundColor:
               theme.palette.mode === "light"
                 ? "#F0F4FA"
                 : theme.palette.background,
-
             boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
           }}
         >
@@ -519,15 +527,13 @@ const ChatComponent = () => {
             <Conversation menu={true} isMobile={isMobile} />
           </SimpleBarStyle>
         </Box>
-
-        {/*  */}
         <ChatFooter />
       </Stack>
+
       {showNewMessagePanel && (
         <Box
           onClick={() => {
-            const el = messageListRef.current;
-            el.scrollTop = el.scrollHeight;
+            scrollToBottom();
             setShowNewMessagePanel(false);
           }}
           sx={{
@@ -553,5 +559,4 @@ const ChatComponent = () => {
 };
 
 export default ChatComponent;
-
 export { Conversation };

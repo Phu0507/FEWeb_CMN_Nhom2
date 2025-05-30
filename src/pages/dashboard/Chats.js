@@ -36,6 +36,7 @@ import {
   UpdateGroupAdmin,
   RemoveConversation,
   AddNewGroupChat,
+  UpdateOrPrependGroupChat,
 } from "../../redux/slices/conversation";
 import CreateGroup from "../../sections/dashboard/CreateGroup";
 
@@ -86,8 +87,9 @@ const Chats = () => {
 
   useEffect(() => {
     const handleGroupUpdated = (updatedChat) => {
-      // console.log("test socket");
+      console.log("test socket", updatedChat);
       dispatch(GroupChatUpdated(updatedChat));
+      dispatch(UpdateOrPrependGroupChat(updatedChat));
     };
 
     socket.on("group:updated", handleGroupUpdated);
