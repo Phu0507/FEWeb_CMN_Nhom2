@@ -49,7 +49,15 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
   },
 }));
 
-const ChatElement = ({ img, name, isGroup, id, user_id, message }) => {
+const ChatElement = ({
+  img,
+  name,
+  isGroup,
+  id,
+  user_id,
+  message,
+  groupAvatar,
+}) => {
   const theme = useTheme();
   const dispatch = useDispatch();
 
@@ -83,7 +91,15 @@ const ChatElement = ({ img, name, isGroup, id, user_id, message }) => {
         <Stack direction="row" alignItems={"center"} spacing={2}>
           {" "}
           {isGroup ? (
-            <GroupAvatar members={user_id} />
+            groupAvatar && groupAvatar !== "" ? (
+              <Avatar
+                alt={name}
+                src={groupAvatar}
+                sx={{ width: 42, height: 42 }}
+              />
+            ) : (
+              <GroupAvatar members={user_id} />
+            )
           ) : (
             <Avatar alt={name} src={img} sx={{ width: 42, height: 42 }} />
           )}
@@ -101,7 +117,15 @@ const ChatElement = ({ img, name, isGroup, id, user_id, message }) => {
   );
 };
 
-const GroupChatElement = ({ img, name, isGroup, id, user_id, message }) => {
+const GroupChatElement = ({
+  img,
+  name,
+  isGroup,
+  id,
+  user_id,
+  message,
+  groupAvatar,
+}) => {
   const theme = useTheme();
   const dispatch = useDispatch();
 
@@ -135,7 +159,15 @@ const GroupChatElement = ({ img, name, isGroup, id, user_id, message }) => {
         <Stack direction="row" alignItems={"center"} spacing={2}>
           {" "}
           {isGroup ? (
-            <GroupAvatar members={user_id} />
+            groupAvatar?.trim() ? (
+              <Avatar
+                alt={name}
+                src={groupAvatar}
+                sx={{ width: 42, height: 42 }}
+              />
+            ) : (
+              <GroupAvatar members={user_id} />
+            )
           ) : (
             <Avatar alt={name} src={img} sx={{ width: 42, height: 42 }} />
           )}
